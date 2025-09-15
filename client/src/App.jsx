@@ -10,15 +10,17 @@ import Blog from './pages/Blog';
 function App() {
   return (
     <Router>
-      <div className="App">
+      <div className="App min-h-screen flex flex-col m-0 p-0">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/projets" element={<Projets />} />
-          <Route path="/apropos" element={<Apropos />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/blog" element={<Blog />} />
-        </Routes>
+        <main className="flex-1 pt-16 md:pt-20">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/projets" element={<Projets />} />
+            <Route path="/apropos" element={<Apropos />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/blog" element={<Blog />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   );

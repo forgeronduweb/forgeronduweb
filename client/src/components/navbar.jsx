@@ -45,7 +45,7 @@ const Navbar = () => {
           </Link>
           <Link 
             className="hover:text-indigo-600 transition-colors max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:rounded-lg max-md:hover:bg-gray-100" 
-            to="/blog"
+            to="#"
             onClick={closeMenu}
           >
             Blog

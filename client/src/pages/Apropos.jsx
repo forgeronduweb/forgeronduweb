@@ -18,19 +18,16 @@ const Apropos = () => {
               </h2>
 
               <p className="mb-4 leading-relaxed">
-                Développeur Full Stack JavaScript freelance. Passionné par le développement web depuis plusieurs années, j'aide les entreprises et particuliers à créer leurs projets digitaux.
+                Développeur Full Stack JavaScript freelance basé en Côte d'Ivoire. Je suis disponible pour la conception de solutions digitales modernes et performantes, afin de vous aider à atteindre vos objectifs.
               </p>
               <p className="mb-4 leading-relaxed">
-                Mon expertise couvre <strong>React</strong>, <strong>Node.js</strong>, <strong>TypeScript</strong> et les bases de données modernes. J'aime créer des applications web performantes, des APIs robustes et des solutions e-commerce qui répondent aux besoins réels de mes clients.
+                Spécialisé en <strong>React</strong>, <strong>Node.js</strong> et <strong>TypeScript</strong>, je développe des applications rapides, fiables et évolutives, avec une attention particulière portée à l'expérience utilisateur.
               </p>
               <p className="mb-4 leading-relaxed">
-                Titulaire d'une <strong>Licence en Informatique et Sciences du Numérique</strong> avec une spécialité en E-commerce & Marketing Digital, je combine compétences techniques et vision business pour livrer des projets qui ont du sens.
-              </p>
-              <p className="mb-4 leading-relaxed">
-                Quand je ne code pas, j'aime partager mes connaissances et aider d'autres développeurs à progresser. Chaque projet est une nouvelle aventure où j'apprends quelque chose de nouveau.
+                Diplômé d'une <strong>Licence en Informatique et Sciences du Numérique</strong> (mention Bien), formé à l'<strong>Orange Digital Center</strong> et à <strong>GoMyCode</strong>, et certifié en <strong>Développement Web & Mobile</strong>, je dispose d'une expertise complète couvrant tout le cycle de développement, du concept à la mise en ligne.
               </p>
               <p className="font-medium leading-relaxed">
-                Transformons ensemble vos idées en applications web modernes et performantes.
+                👉 Si vous avez une idée ou un projet, je suis prêt à la transformer en une application web moderne et performante.
               </p>
             </div>
 

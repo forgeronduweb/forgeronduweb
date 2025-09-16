@@ -54,7 +54,10 @@ const Projets = () => {
   ];
 
   return (
-    <div className="min-h-screen overflow-y-auto py-8">
+    <div 
+      className="min-h-screen overflow-y-auto py-8 transition-colors duration-300"
+      style={{ backgroundColor: isDark ? '#000000' : '#ffffff' }}
+    >
       <h1 
         className="text-2xl md:text-3xl font-semibold text-center mx-auto px-4"
         style={{ color: isDark ? '#ffffff' : '#000000' }}

@@ -25,10 +25,9 @@ export default function Contact() {
         <div className="max-w-2xl mx-auto w-full">
           {/* Contact Form */}
               <div 
-                className="border-2 rounded-lg p-4 md:p-6"
+                className="rounded-xl p-6 md:p-8"
                 style={{
-                  backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
-                  borderColor: isDark ? '#ffffff' : '#000000'
+                  backgroundColor: isDark ? '#1a1a1a' : '#f8f9fa'
                 }}
               >      
                 <form className="space-y-3 md:space-y-4">
@@ -46,17 +45,11 @@ export default function Contact() {
                         id="name"
                         name="name"
                         required
-                        className="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 rounded-lg focus:ring-2 transition-colors text-sm md:text-base focus:outline-none"
+                        className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg focus:ring-2 transition-all duration-200 text-sm md:text-base focus:outline-none hover:shadow-md"
                         style={{
                           backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                           color: isDark ? '#ffffff' : '#000000',
-                          borderColor: isDark ? '#555555' : '#d1d5db'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                          border: isDark ? 'none' : '1px solid #e5e7eb'
                         }}
                         placeholder="Votre nom"
                       />
@@ -75,17 +68,11 @@ export default function Contact() {
                         id="email"
                         name="email"
                         required
-                        className="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 rounded-lg focus:ring-2 transition-colors text-sm md:text-base focus:outline-none"
+                        className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg focus:ring-2 transition-all duration-200 text-sm md:text-base focus:outline-none hover:shadow-md"
                         style={{
                           backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                           color: isDark ? '#ffffff' : '#000000',
-                          borderColor: isDark ? '#555555' : '#d1d5db'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                          border: isDark ? 'none' : '1px solid #e5e7eb'
                         }}
                         placeholder="votre@email.com"
                       />
@@ -105,17 +92,11 @@ export default function Contact() {
                       id="subject"
                       name="subject"
                       required
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 rounded-lg focus:ring-2 transition-colors text-sm md:text-base focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg focus:ring-2 transition-all duration-200 text-sm md:text-base focus:outline-none hover:shadow-md"
                       style={{
                         backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                         color: isDark ? '#ffffff' : '#000000',
-                        borderColor: isDark ? '#555555' : '#d1d5db'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                        border: isDark ? 'none' : '1px solid #e5e7eb'
                       }}
                       placeholder="Sujet de votre message"
                     />
@@ -134,17 +115,11 @@ export default function Contact() {
                       name="message"
                       required
                       rows={3}
-                      className="w-full px-3 py-2 border-2 rounded-lg focus:ring-2 transition-colors resize-none text-sm focus:outline-none"
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-all duration-200 resize-none text-sm focus:outline-none hover:shadow-md"
                       style={{
                         backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                         color: isDark ? '#ffffff' : '#000000',
-                        borderColor: isDark ? '#555555' : '#d1d5db'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                        border: isDark ? 'none' : '1px solid #e5e7eb'
                       }}
                       placeholder="Décrivez votre projet ou votre demande..."
                     />
@@ -152,17 +127,19 @@ export default function Contact() {
 
                   <button
                     type="submit"
-                    className="w-full py-2 px-6 rounded-lg font-medium focus:ring-2 focus:ring-offset-2 transition-colors active:scale-[0.98] border-2 text-sm"
+                    className="w-full py-2 px-6 rounded-lg font-medium focus:ring-2 focus:ring-offset-2 transition-all duration-200 active:scale-[0.98] border-2 text-sm hover:shadow-lg"
                     style={{
                       backgroundColor: isDark ? '#ffffff' : '#000000',
                       color: isDark ? '#000000' : '#ffffff',
                       borderColor: isDark ? '#ffffff' : '#000000'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = isDark ? '#e5e5e5' : '#1f2937';
+                      e.target.style.backgroundColor = isDark ? '#e5e5e5' : '#374151';
+                      e.target.style.transform = 'translateY(-1px)';
                     }}
                     onMouseLeave={(e) => {
                       e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
+                      e.target.style.transform = 'translateY(0)';
                     }}
                   >
                     Envoyer le message
@@ -175,10 +152,16 @@ export default function Contact() {
             <div className="flex justify-center space-x-6">
               <a 
                 href="#" 
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
                 style={{ 
                   backgroundColor: isDark ? '#374151' : '#f3f4f6',
                   color: isDark ? '#ffffff' : '#000000'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#4b5563' : '#e5e7eb';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
                 }}
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -187,10 +170,16 @@ export default function Contact() {
               </a>
               <a 
                 href="#" 
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
                 style={{ 
                   backgroundColor: isDark ? '#374151' : '#f3f4f6',
                   color: isDark ? '#ffffff' : '#000000'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#4b5563' : '#e5e7eb';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
                 }}
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -199,10 +188,16 @@ export default function Contact() {
               </a>
               <a 
                 href="#" 
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
                 style={{ 
                   backgroundColor: isDark ? '#374151' : '#f3f4f6',
                   color: isDark ? '#ffffff' : '#000000'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#4b5563' : '#e5e7eb';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
                 }}
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -211,10 +206,16 @@ export default function Contact() {
               </a>
               <a 
                 href="#" 
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
                 style={{ 
                   backgroundColor: isDark ? '#374151' : '#f3f4f6',
                   color: isDark ? '#ffffff' : '#000000'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#4b5563' : '#e5e7eb';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
                 }}
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

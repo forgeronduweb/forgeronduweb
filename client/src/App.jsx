@@ -21,7 +21,7 @@ function AppContent() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/projets" element={<Projets />} />
+            <Route path="/projets" element={<div className="h-full overflow-auto"><Projets /></div>} />
             <Route path="/apropos" element={<div className="h-full overflow-auto"><Apropos /></div>} />
             <Route path="/contact" element={<div className="h-full overflow-auto"><Contact /></div>} />
             <Route path="/blog" element={<div className="h-full overflow-auto"><Blog /></div>} />

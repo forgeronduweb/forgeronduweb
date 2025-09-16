@@ -64,17 +64,11 @@ const ContactModal = ({ isOpen, onClose }) => {
               id="modal-name"
               name="name"
               required
-              className="w-full px-3 py-2 border-2 rounded-lg focus:ring-2 transition-colors text-sm focus:outline-none"
+              className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-colors text-sm focus:outline-none"
               style={{
                 backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                 color: isDark ? '#ffffff' : '#000000',
-                borderColor: isDark ? '#555555' : '#d1d5db'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                border: isDark ? 'none' : '1px solid #e5e7eb'
               }}
               placeholder="Votre nom"
             />
@@ -93,17 +87,11 @@ const ContactModal = ({ isOpen, onClose }) => {
               id="modal-email"
               name="email"
               required
-              className="w-full px-3 py-2 border-2 rounded-lg focus:ring-2 transition-colors text-sm focus:outline-none"
+              className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-colors text-sm focus:outline-none"
               style={{
                 backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                 color: isDark ? '#ffffff' : '#000000',
-                borderColor: isDark ? '#555555' : '#d1d5db'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                border: isDark ? 'none' : '1px solid #e5e7eb'
               }}
               placeholder="votre@email.com"
             />
@@ -122,17 +110,11 @@ const ContactModal = ({ isOpen, onClose }) => {
               name="message"
               required
               rows={3}
-              className="w-full px-3 py-2 border-2 rounded-lg focus:ring-2 transition-colors resize-none text-sm focus:outline-none"
+              className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-colors resize-none text-sm focus:outline-none"
               style={{
                 backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                 color: isDark ? '#ffffff' : '#000000',
-                borderColor: isDark ? '#555555' : '#d1d5db'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = isDark ? '#555555' : '#d1d5db';
+                border: isDark ? 'none' : '1px solid #e5e7eb'
               }}
               placeholder="Votre message..."
             />

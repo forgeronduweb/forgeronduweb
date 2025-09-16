@@ -12,7 +12,7 @@ function App() {
     <Router>
       <div className="App min-h-screen flex flex-col m-0 p-0">
         <Navbar />
-        <main className="flex-1 pt-16 md:pt-20">
+        <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/projets" element={<Projets />} />

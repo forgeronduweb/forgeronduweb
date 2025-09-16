@@ -63,7 +63,7 @@ const Blog = () => {
               <div key={project.id} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-black hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex flex-col h-full">
                 <div className="relative">
                   <img 
-                    className="w-full h-40 sm:h-48 object-cover transition-all duration-300" 
+                    className="w-full h-40 sm:h-48 object-cover object-center transition-all duration-300" 
                     src={project.image} 
                     alt={project.title}
                   />

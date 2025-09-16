@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 const Home = () => {
   return (
     <>
-      <section className="bg-white w-full bg-no-repeat bg-cover bg-center text-sm pb-44 min-h-screen">
+      <section className="bg-white w-full bg-no-repeat bg-cover bg-center text-sm h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden">
         {/* Main Hero Section */}
-        <div className="text-center max-w-[850px] mx-auto mt-8 px-4">
+        <div className="text-center max-w-[850px] mx-auto px-4">
           {/* Avatar */}
           <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-4 relative">
             <div className="w-full h-full bg-black rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-200 hover:border-black transition-colors">

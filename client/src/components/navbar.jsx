@@ -15,7 +15,7 @@ const Navbar = () => {
   return (
     <header className="flex items-center justify-between px-4 md:px-16 py-3 md:py-4 w-full bg-white mt-1 md:mt-2 relative z-50">
       <Link to="/" className="text-xl font-bold text-gray-900">
-        forgeron du web
+      F⚒W
       </Link>
       
       <div className="flex items-center space-x-4">

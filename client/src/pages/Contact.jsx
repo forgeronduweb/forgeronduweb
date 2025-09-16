@@ -6,10 +6,9 @@ export default function Contact() {
         Prêt à donner vie à votre projet ? Discutons de vos besoins et créons quelque chose d'exceptionnel ensemble.
       </p>
       
-      <div className="flex flex-wrap items-center justify-center gap-8 pt-8 md:pt-12">
-        <div className="min-h-screen bg-white py-8 md:py-12 px-4 w-full">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)] px-4 py-8">
+        <div className="max-w-4xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
               {/* Contact Info */}
               <div className="bg-black rounded-2xl p-6 md:p-8 text-white">
                 <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 md:mb-6">
@@ -151,7 +150,6 @@ export default function Contact() {
                 </form>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </>

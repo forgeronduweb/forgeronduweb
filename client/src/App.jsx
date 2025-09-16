@@ -10,7 +10,7 @@ import Blog from './pages/Blog';
 function App() {
   return (
     <Router>
-      <div className="App min-h-screen flex flex-col m-0 p-0">
+      <div className="App min-h-screen flex flex-col m-0 p-0" data-theme="lofi">
         <Navbar />
         <main className="flex-1">
           <Routes>

@@ -1,4 +1,4 @@
-const Blog = () => {
+const Projets = () => {
   const projects = [
     {
       id: 1,
@@ -128,4 +128,4 @@ const Blog = () => {
   );
 };
 
-export default Blog;
+export default Projets;

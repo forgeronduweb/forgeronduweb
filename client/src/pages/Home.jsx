@@ -1,19 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import StatusIndicator from '../components/StatusIndicator';
+import avatarImage from '../assets/avatar.png';
 
 const Home = () => {
   return (
     <>
-      <section className="bg-white w-full bg-no-repeat bg-cover bg-center text-sm h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden">
+      <section className="bg-white w-full bg-no-repeat bg-cover bg-center text-sm h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden relative">
+        <StatusIndicator />
         {/* Main Hero Section */}
         <div className="text-center max-w-[850px] mx-auto px-4">
           {/* Avatar */}
           <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-4 relative">
-            <div className="w-full h-full bg-black rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-200 hover:border-black transition-colors">
-              {/* Avatar placeholder - you can replace this with an actual image */}
-              <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-full flex items-center justify-center">
-                <span className="text-2xl md:text-4xl">👨‍💻</span>
-              </div>
+            <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-200 hover:border-gray-400 transition-colors">
+              <img 
+                src={avatarImage} 
+                alt="Avatar d'Evrard" 
+                className="w-full h-full object-cover rounded-full"
+              />
             </div>
           </div>
 
@@ -21,6 +25,7 @@ const Home = () => {
           <h2 className="text-lg md:text-xl font-medium text-black mb-8">
             Salut, c'est Evrard 👋
           </h2>
+
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-7xl font-medium text-black leading-tight">

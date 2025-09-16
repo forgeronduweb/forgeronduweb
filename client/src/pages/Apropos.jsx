@@ -1,3 +1,5 @@
+import React from 'react';
+
 const Apropos = () => {
   const profileImage = "https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?q=80&w=451&h=451&auto=format&fit=crop";
 

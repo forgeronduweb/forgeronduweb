@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import StatusIndicator from "./StatusIndicator";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,12 +46,13 @@ const Navbar = () => {
           </Link>
           <Link 
             className="hover:text-indigo-600 transition-colors max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:rounded-lg max-md:hover:bg-gray-100" 
-            to="#"
+            to="/blog"
             onClick={closeMenu}
           >
             Blog
           </Link>
-          <button onClick={closeMenu} className="md:hidden text-gray-600 mt-8 p-3 hover:bg-gray-100 rounded-full transition-colors">
+          
+          <button onClick={closeMenu} className="md:hidden text-gray-600 p-3 hover:bg-gray-100 rounded-full transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
               strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 18L18 6M6 6l12 12" />

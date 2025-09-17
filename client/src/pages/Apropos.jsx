@@ -3,7 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const Apropos = () => {
   const { isDark } = useTheme();
-  const profileImage = "https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?q=80&w=451&h=451&auto=format&fit=crop";
+  const profileImage = "/profil.jpg";
 
   return (
     <div 
@@ -23,15 +23,6 @@ const Apropos = () => {
             >
               À propos de moi
             </h1>
-            <div 
-              className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full animate-pulse"
-              style={{ 
-                width: '50%',
-                background: isDark 
-                  ? 'linear-gradient(90deg, #10b981, #06b6d4)' 
-                  : 'linear-gradient(90deg, #059669, #0891b2)'
-              }}
-            />
           </div>
           <p 
             className="text-xs md:text-sm text-center max-w-xl mx-auto px-4 mt-4 leading-relaxed"
@@ -74,7 +65,7 @@ const Apropos = () => {
               </p>
             </div>
 
-            <div className="relative shadow-2xl shadow-indigo-600/40 rounded-2xl overflow-hidden shrink-0">
+            <div className="relative rounded-2xl overflow-hidden shrink-0">
               <img
                 className="max-w-md w-full object-cover rounded-2xl"
                 src={profileImage}

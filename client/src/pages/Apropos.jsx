@@ -6,21 +6,46 @@ const Apropos = () => {
   const profileImage = "https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?q=80&w=451&h=451&auto=format&fit=crop";
 
   return (
-    <>
-      <h1 
-        className="text-2xl md:text-3xl font-semibold text-center mx-auto px-4"
-        style={{ color: isDark ? '#ffffff' : '#000000' }}
-      >
-        À propos de moi
-      </h1>
-      <p 
-        className="text-sm text-center mt-2 max-w-lg mx-auto px-4"
-        style={{ color: isDark ? '#cccccc' : '#64748b' }}
-      >
-        Découvrez mon parcours, mes compétences et ma passion pour le développement web.
-      </p>
+    <div 
+      className="min-h-screen transition-colors duration-300"
+      style={{ backgroundColor: isDark ? '#000000' : '#ffffff' }}
+    >
+      <div className="py-4">
+        <div className="text-center mb-6 md:mb-8">
+          <div className="relative inline-block">
+            <h1 
+              className="text-2xl md:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent animate-pulse"
+              style={{ 
+                backgroundImage: isDark 
+                  ? 'linear-gradient(135deg, #ffffff 0%, #10b981 50%, #06b6d4 100%)' 
+                  : 'linear-gradient(135deg, #1f2937 0%, #059669 50%, #0891b2 100%)'
+              }}
+            >
+              À propos de moi
+            </h1>
+            <div 
+              className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full animate-pulse"
+              style={{ 
+                width: '50%',
+                background: isDark 
+                  ? 'linear-gradient(90deg, #10b981, #06b6d4)' 
+                  : 'linear-gradient(90deg, #059669, #0891b2)'
+              }}
+            />
+          </div>
+          <p 
+            className="text-xs md:text-sm text-center max-w-xl mx-auto px-4 mt-4 leading-relaxed"
+            style={{ color: isDark ? '#cccccc' : '#64748b' }}
+          >
+            Découvrez mon parcours, mes compétences et ma passion pour le développement web.
+            <span className="font-medium" style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
+              {" "}Une histoire de créativité, d'apprentissage continu et d'innovation.
+            </span>
+          </p>
+        </div>
+      </div>
       
-      <div className="py-16 px-4 sm:px-6 lg:px-8">
+      <div className="py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-start justify-between gap-16">
@@ -60,7 +85,7 @@ const Apropos = () => {
         </div>
       </div>
       </div>
-    </>
+    </div>
   );
 };
 

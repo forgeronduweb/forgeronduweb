@@ -5,21 +5,41 @@ const Blog = () => {
   const { isDark } = useTheme();
   return (
     <div 
-      className="min-h-screen py-8 transition-colors duration-300"
+      className="min-h-screen py-4 transition-colors duration-300"
       style={{ backgroundColor: isDark ? '#000000' : '#ffffff' }}
     >
-      <h1 
-        className="text-2xl md:text-3xl font-semibold text-center mx-auto px-4"
-        style={{ color: isDark ? '#ffffff' : '#000000' }}
-      >
-        Latest Blog
-      </h1>
-      <p 
-        className="text-sm text-center mt-2 max-w-lg mx-auto px-4"
-        style={{ color: isDark ? '#cccccc' : '#64748b' }}
-      >
-        Stay ahead of the curve with fresh content on code, design, startups, and everything in between.
-      </p>
+      <div className="text-center mb-6 md:mb-8">
+        <div className="relative inline-block">
+          <h1 
+            className="text-2xl md:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent animate-pulse"
+            style={{ 
+              backgroundImage: isDark 
+                ? 'linear-gradient(135deg, #ffffff 0%, #8b5cf6 50%, #ec4899 100%)' 
+                : 'linear-gradient(135deg, #1f2937 0%, #7c3aed 50%, #db2777 100%)'
+            }}
+          >
+            Mes articles
+          </h1>
+          <div 
+            className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full animate-pulse"
+            style={{ 
+              width: '50%',
+              background: isDark 
+                ? 'linear-gradient(90deg, #8b5cf6, #ec4899)' 
+                : 'linear-gradient(90deg, #7c3aed, #db2777)'
+            }}
+          />
+        </div>
+        <p 
+          className="text-xs md:text-sm text-center max-w-xl mx-auto px-4 mt-4 leading-relaxed"
+          style={{ color: isDark ? '#cccccc' : '#64748b' }}
+        >
+          Stay ahead of the curve with fresh content on code, design, startups, and everything in between.
+          <span className="font-medium" style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
+            {" "}Explorez les dernières tendances et innovations du développement web.
+          </span>
+        </p>
+      </div>
       
       <div className="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">

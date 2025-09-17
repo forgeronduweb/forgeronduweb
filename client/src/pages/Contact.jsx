@@ -8,18 +8,38 @@ export default function Contact() {
       className="h-screen flex flex-col py-4 transition-colors duration-300"
       style={{ backgroundColor: isDark ? '#000000' : '#ffffff' }}
     >
-      <h1 
-        className="text-xl md:text-2xl font-semibold text-center mx-auto px-4 mb-2"
-        style={{ color: isDark ? '#ffffff' : '#000000' }}
-      >
-        Contactez-moi
-      </h1>
-      <p 
-        className="text-xs md:text-sm text-center max-w-lg mx-auto px-4 mb-4"
-        style={{ color: isDark ? '#cccccc' : '#64748b' }}
-      >
-        Prêt à donner vie à votre projet ? Discutons de vos besoins et créons quelque chose d'exceptionnel ensemble.
-      </p>
+      <div className="text-center mb-6 md:mb-8">
+        <div className="relative inline-block">
+          <h1 
+            className="text-2xl md:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent animate-pulse"
+            style={{ 
+              backgroundImage: isDark 
+                ? 'linear-gradient(135deg, #ffffff 0%, #f59e0b 50%, #ef4444 100%)' 
+                : 'linear-gradient(135deg, #1f2937 0%, #d97706 50%, #dc2626 100%)'
+            }}
+          >
+            Contactez-moi
+          </h1>
+          <div 
+            className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full animate-pulse"
+            style={{ 
+              width: '50%',
+              background: isDark 
+                ? 'linear-gradient(90deg, #f59e0b, #ef4444)' 
+                : 'linear-gradient(90deg, #d97706, #dc2626)'
+            }}
+          />
+        </div>
+        <p 
+          className="text-xs md:text-sm text-center max-w-xl mx-auto px-4 mt-4 leading-relaxed"
+          style={{ color: isDark ? '#cccccc' : '#64748b' }}
+        >
+          Prêt à donner vie à votre projet ? Discutons de vos besoins et créons quelque chose d'exceptionnel ensemble.
+          <span className="font-medium" style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
+            {" "}Transformons vos idées en réalité digitale.
+          </span>
+        </p>
+      </div>
       
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="max-w-2xl mx-auto w-full">

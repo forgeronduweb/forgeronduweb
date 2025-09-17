@@ -55,174 +55,188 @@ const Projets = () => {
 
   return (
     <div 
-      className="min-h-screen overflow-y-auto py-8 transition-colors duration-300"
+      className="min-h-screen overflow-y-auto py-4 transition-colors duration-300"
       style={{ backgroundColor: isDark ? '#000000' : '#ffffff' }}
     >
-      <h1 
-        className="text-2xl md:text-3xl font-semibold text-center mx-auto px-4"
-        style={{ color: isDark ? '#ffffff' : '#000000' }}
-      >
-        Mes Projets
-      </h1>
-      <p 
-        className="text-sm text-center mt-2 max-w-lg mx-auto px-4"
-        style={{ color: isDark ? '#cccccc' : '#64748b' }}
-      >
-        Découvrez une sélection de mes réalisations, des applications web modernes aux APIs robustes.
-      </p>
+      <div className="text-center mb-6 md:mb-8">
+        <div className="relative inline-block">
+          <h1 
+            className="text-2xl md:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent animate-pulse"
+            style={{ 
+              backgroundImage: isDark 
+                ? 'linear-gradient(135deg, #ffffff 0%, #a855f7 50%, #3b82f6 100%)' 
+                : 'linear-gradient(135deg, #1f2937 0%, #7c3aed 50%, #2563eb 100%)'
+            }}
+          >
+            Mes Projets
+          </h1>
+          <div 
+            className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full animate-pulse"
+            style={{ 
+              width: '50%',
+              background: isDark 
+                ? 'linear-gradient(90deg, #a855f7, #3b82f6)' 
+                : 'linear-gradient(90deg, #7c3aed, #2563eb)'
+            }}
+          />
+        </div>
+        <p 
+          className="text-xs md:text-sm text-center max-w-xl mx-auto px-4 mt-4 leading-relaxed"
+          style={{ color: isDark ? '#cccccc' : '#64748b' }}
+        >
+          Découvrez une sélection de mes réalisations, des applications web modernes aux APIs robustes. 
+          <span className="font-medium" style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
+            {" "}Chaque projet reflète ma passion pour l'innovation et l'excellence technique.
+          </span>
+        </p>
+      </div>
       
       <div className="flex flex-wrap items-center justify-center gap-8 pt-8 md:pt-12">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="flex flex-col gap-6">
             {projects.map((project) => (
               <div 
                 key={project.id} 
-                className="border-2 rounded-xl overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex flex-col h-full"
+                className="border rounded-lg md:rounded-xl hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl p-3 md:p-6"
                 style={{
                   backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
-                  borderColor: isDark ? '#404040' : '#e5e7eb',
-                  ':hover': {
-                    borderColor: isDark ? '#ffffff' : '#000000'
-                  }
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.borderColor = isDark ? '#ffffff' : '#000000';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.borderColor = isDark ? '#404040' : '#e5e7eb';
+                  borderColor: isDark ? '#404040' : '#e5e7eb'
                 }}
               >
-                <div className="relative">
-                  <img 
-                    className="w-full h-40 sm:h-48 object-cover object-center transition-all duration-300" 
-                    src={project.image} 
-                    alt={project.title}
-                  />
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
-                    <span 
-                      className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border"
-                      style={{
-                        backgroundColor: isDark ? '#000000' : '#ffffff',
-                        color: isDark ? '#ffffff' : '#000000',
-                        borderColor: isDark ? '#404040' : '#e5e7eb'
-                      }}
-                    >
-                      {project.category}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="p-4 sm:p-6 flex flex-col flex-1">
-                  <h3 
-                    className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3"
-                    style={{ color: isDark ? '#ffffff' : '#000000' }}
-                  >
-                    {project.title}
-                  </h3>
-                  <p 
-                    className="mb-3 sm:mb-4 leading-relaxed text-sm sm:text-base flex-1"
-                    style={{ color: isDark ? '#cccccc' : '#4b5563' }}
-                  >
-                    {project.description}
-                  </p>
-                  
-                  <div className="mb-3 sm:mb-4">
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {project.technologies.map((tech, index) => (
-                        <span 
-                          key={index} 
-                          className="px-2 py-1 rounded text-xs font-medium border"
-                          style={{
-                            backgroundColor: isDark ? '#2d2d2d' : '#f3f4f6',
-                            color: isDark ? '#cccccc' : '#374151',
-                            borderColor: isDark ? '#404040' : '#d1d5db'
-                          }}
-                        >
-                          {tech}
-                        </span>
-                      ))}
+                <div className="flex flex-col md:flex-row gap-3 md:gap-6">
+                  <div className="md:w-1/3 relative">
+                    <img 
+                      className="w-full h-32 md:h-48 object-cover rounded md:rounded-lg transition-all duration-300" 
+                      src={project.image} 
+                      alt={project.title}
+                    />
+                    <div className="absolute top-1.5 right-1.5 md:top-3 md:right-3">
+                      <span 
+                        className="px-1.5 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor: isDark ? '#0f3460' : '#6366f1',
+                          color: '#ffffff'
+                        }}
+                      >
+                        {project.category}
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-auto">
-                    {project.link ? (
-                      <a 
-                        href={project.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex-1 py-2.5 sm:py-2 px-4 rounded-lg font-medium transition-colors text-sm text-center"
-                        style={{
-                          backgroundColor: isDark ? '#ffffff' : '#000000',
-                          color: isDark ? '#000000' : '#ffffff'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = isDark ? '#e5e5e5' : '#1f2937';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
-                        }}
+                  <div className="md:w-2/3 flex flex-col justify-between">
+                    <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 md:mb-3 gap-1 md:gap-2">
+                        <h3 
+                          className="text-base md:text-xl font-semibold"
+                          style={{ color: isDark ? '#ffffff' : '#000000' }}
+                        >
+                          {project.title}
+                        </h3>
+                        {project.link && (
+                          <span 
+                            className="px-1.5 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-medium w-fit"
+                            style={{
+                              backgroundColor: isDark ? '#22c55e' : '#16a34a',
+                              color: '#ffffff'
+                            }}
+                          >
+                            Work Finished
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p 
+                        className="mb-2 md:mb-4 leading-relaxed text-xs md:text-sm"
+                        style={{ color: isDark ? '#cccccc' : '#64748b' }}
                       >
-                        Voir le projet
-                      </a>
-                    ) : (
-                      <button 
-                        className="flex-1 py-2.5 sm:py-2 px-4 rounded-lg font-medium transition-colors text-sm"
-                        style={{
-                          backgroundColor: isDark ? '#ffffff' : '#000000',
-                          color: isDark ? '#000000' : '#ffffff'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = isDark ? '#e5e5e5' : '#1f2937';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
-                        }}
-                      >
-                        Voir le projet
-                      </button>
-                    )}
-                    {project.github ? (
-                      <a 
-                        href={project.github} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex-1 border-2 py-2.5 sm:py-2 px-4 rounded-lg font-medium transition-colors text-sm text-center"
-                        style={{
-                          borderColor: isDark ? '#ffffff' : '#000000',
-                          color: isDark ? '#ffffff' : '#000000',
-                          backgroundColor: 'transparent'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
-                          e.target.style.color = isDark ? '#000000' : '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = 'transparent';
-                          e.target.style.color = isDark ? '#ffffff' : '#000000';
-                        }}
-                      >
-                        Code source
-                      </a>
-                    ) : (
-                      <button 
-                        className="flex-1 border-2 py-2.5 sm:py-2 px-4 rounded-lg font-medium transition-colors text-sm"
-                        style={{
-                          borderColor: isDark ? '#ffffff' : '#000000',
-                          color: isDark ? '#ffffff' : '#000000',
-                          backgroundColor: 'transparent'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
-                          e.target.style.color = isDark ? '#000000' : '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = 'transparent';
-                          e.target.style.color = isDark ? '#ffffff' : '#000000';
-                        }}
-                      >
-                        Code source
-                      </button>
-                    )}
+                        {project.description}
+                      </p>
+                      
+                      <div className="mb-2 md:mb-4">
+                        <div className="flex flex-wrap gap-1 md:gap-2">
+                          {project.technologies.map((tech, index) => (
+                            <span 
+                              key={index} 
+                              className="px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs font-medium"
+                              style={{
+                                backgroundColor: isDark ? '#374151' : '#e5e7eb',
+                                color: isDark ? '#ffffff' : '#374151'
+                              }}
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-1.5 md:gap-3">
+                      {project.link ? (
+                        <a 
+                          href={project.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-200 text-xs md:text-sm border text-center"
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: isDark ? '#ffffff' : '#000000',
+                            borderColor: isDark ? '#ffffff' : '#000000'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
+                            e.target.style.color = isDark ? '#000000' : '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                            e.target.style.color = isDark ? '#ffffff' : '#000000';
+                          }}
+                        >
+                          Know more →
+                        </a>
+                      ) : (
+                        <button 
+                          className="px-4 md:px-6 py-2 rounded-full font-medium transition-all duration-200 text-sm border"
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: isDark ? '#ffffff' : '#000000',
+                            borderColor: isDark ? '#ffffff' : '#000000'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
+                            e.target.style.color = isDark ? '#000000' : '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                            e.target.style.color = isDark ? '#ffffff' : '#000000';
+                          }}
+                        >
+                          Know more →
+                        </button>
+                      )}
+                      {project.github && (
+                        <a 
+                          href={project.github} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-200 text-xs md:text-sm border text-center"
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: isDark ? '#ffffff' : '#000000',
+                            borderColor: isDark ? '#ffffff' : '#000000'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
+                            e.target.style.color = isDark ? '#000000' : '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                            e.target.style.color = isDark ? '#ffffff' : '#000000';
+                          }}
+                        >
+                          Code source
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -17,15 +17,23 @@ const Home = () => {
         <div className="text-center max-w-4xl mx-auto">
           <div className="mb-8 flex justify-center">
             <div className="relative">
-              <img 
-                src={avatarImage} 
-                alt="Avatar d'Evrard" 
-                className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 transition-colors duration-300"
-                style={{ 
-                  borderColor: isDark ? '#ffffff' : '#000000',
-                  backgroundColor: isDark ? '#000000' : '#ffffff'
+              <div 
+                className="w-24 h-24 md:w-32 md:h-32 rounded-full p-1 animate-pulse"
+                style={{
+                  background: isDark 
+                    ? 'linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #f59e0b 100%)' 
+                    : 'linear-gradient(135deg, #0891b2 0%, #7c3aed 50%, #d97706 100%)'
                 }}
-              />
+              >
+                <img 
+                  src={avatarImage} 
+                  alt="Avatar d'Evrard" 
+                  className="w-full h-full rounded-full object-cover transition-colors duration-300"
+                  style={{ 
+                    backgroundColor: isDark ? '#000000' : '#ffffff'
+                  }}
+                />
+              </div>
             </div>
           </div>
 
@@ -38,13 +46,28 @@ const Home = () => {
           </h2>
 
           {/* Main Heading */}
-          <h1 
-            className="text-4xl md:text-7xl font-medium leading-tight"
-            style={{ color: isDark ? '#ffffff' : '#000000' }}
-          >
-            Développeur Full Stack
+          <h1 className="text-4xl md:text-7xl font-bold leading-tight">
+            <span 
+              className="bg-gradient-to-r bg-clip-text text-transparent animate-pulse"
+              style={{ 
+                backgroundImage: isDark 
+                  ? 'linear-gradient(135deg, #ffffff 0%, #06b6d4 50%, #8b5cf6 100%)' 
+                  : 'linear-gradient(135deg, #1f2937 0%, #0891b2 50%, #7c3aed 100%)'
+              }}
+            >
+              Développeur Full Stack
+            </span>
             <br />
-            <span style={{ color: isDark ? '#ffffff' : '#000000' }}>JavaScript</span>
+            <span 
+              className="bg-gradient-to-r bg-clip-text text-transparent animate-pulse"
+              style={{ 
+                backgroundImage: isDark 
+                  ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)' 
+                  : 'linear-gradient(135deg, #d97706 0%, #dc2626 50%, #db2777 100%)'
+              }}
+            >
+              JavaScript
+            </span>
           </h1>
 
           {/* Description */}

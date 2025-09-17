@@ -30,7 +30,7 @@ const Navbar = () => {
       
       <div className="flex items-center space-x-4">
         <nav 
-          className={`max-md:fixed max-md:top-0 max-md:left-0 max-md:h-full max-md:pt-20 items-center justify-start max-md:justify-center transition-all duration-300 ease-in-out backdrop-blur-md flex-col md:flex-row flex gap-8 text-sm font-normal z-40 ${
+          className={`max-md:fixed max-md:top-0 max-md:left-0 max-md:h-full max-md:pt-20 max-md:pl-8 items-center justify-start max-md:justify-start max-md:items-start transition-all duration-300 ease-in-out backdrop-blur-md flex-col md:flex-row flex gap-8 text-sm font-normal z-40 ${
             isMenuOpen ? 'max-md:w-full max-md:opacity-100' : 'max-md:w-0 max-md:opacity-0'
           } max-md:overflow-hidden`}
           style={{ 
@@ -39,35 +39,364 @@ const Navbar = () => {
           }}
         >
           <Link 
-            className="hover:text-indigo-600 transition-colors max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:rounded-lg max-md:hover:bg-gray-100 dark:max-md:hover:bg-gray-800" 
+            className="relative transition-all duration-300 max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:w-screen max-md:mb-2 max-md:-ml-8 max-md:pl-10 md:hover:scale-105 md:hover:-translate-y-0.5" 
             to="/projets"
             onClick={closeMenu}
+            style={{ 
+              color: isDark ? '#ffffff' : '#000000',
+              textShadow: '0 0 0 transparent'
+            }}
+            onMouseEnter={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = isDark ? '0 0 8px rgba(255, 255, 255, 0.3)' : '0 0 8px rgba(0, 0, 0, 0.3)';
+                e.target.style.color = isDark ? '#ffffff' : '#000000';
+                
+                // Créer l'élément de trait progressif
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: -2px;
+                  left: 0;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = '100%';
+                }, 10);
+              } else {
+                e.target.style.transform = 'translateX(8px)';
+                
+                // Créer l'élément de trait progressif pour mobile
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline-mobile';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: 8px;
+                  left: 32px;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = 'calc(100% - 64px)';
+                }, 10);
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = '0 0 0 transparent';
+                
+                // Supprimer le trait progressif
+                const underline = e.target.querySelector('.progressive-underline');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              } else {
+                e.target.style.transform = 'translateX(0)';
+                
+                // Supprimer le trait progressif mobile
+                const underline = e.target.querySelector('.progressive-underline-mobile');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              }
+            }}
           >
             Projets
           </Link>
           <Link 
-            className="hover:text-indigo-600 transition-colors max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:rounded-lg max-md:hover:bg-gray-100 dark:max-md:hover:bg-gray-800" 
+            className="relative transition-all duration-300 max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:w-screen max-md:mb-2 max-md:-ml-8 max-md:pl-10 md:hover:scale-105 md:hover:-translate-y-0.5" 
             to="/apropos"
             onClick={closeMenu}
+            style={{ 
+              color: isDark ? '#ffffff' : '#000000',
+              textShadow: '0 0 0 transparent'
+            }}
+            onMouseEnter={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = isDark ? '0 0 8px rgba(255, 255, 255, 0.3)' : '0 0 8px rgba(0, 0, 0, 0.3)';
+                e.target.style.color = isDark ? '#ffffff' : '#000000';
+                
+                // Créer l'élément de trait progressif
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: -2px;
+                  left: 0;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = '100%';
+                }, 10);
+              } else {
+                e.target.style.transform = 'translateX(8px)';
+                
+                // Créer l'élément de trait progressif pour mobile
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline-mobile';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: 8px;
+                  left: 32px;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = 'calc(100% - 64px)';
+                }, 10);
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = '0 0 0 transparent';
+                
+                // Supprimer le trait progressif
+                const underline = e.target.querySelector('.progressive-underline');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              } else {
+                e.target.style.transform = 'translateX(0)';
+                
+                // Supprimer le trait progressif mobile
+                const underline = e.target.querySelector('.progressive-underline-mobile');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              }
+            }}
           >
             Apropos
           </Link>
           <Link 
-            className="hover:text-indigo-600 transition-colors max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:rounded-lg max-md:hover:bg-gray-100 dark:max-md:hover:bg-gray-800" 
+            className="relative transition-all duration-300 max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:w-screen max-md:mb-2 max-md:-ml-8 max-md:pl-10 md:hover:scale-105 md:hover:-translate-y-0.5" 
             to="/contact"
             onClick={closeMenu}
+            style={{ 
+              color: isDark ? '#ffffff' : '#000000',
+              textShadow: '0 0 0 transparent'
+            }}
+            onMouseEnter={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = isDark ? '0 0 8px rgba(255, 255, 255, 0.3)' : '0 0 8px rgba(0, 0, 0, 0.3)';
+                e.target.style.color = isDark ? '#ffffff' : '#000000';
+                
+                // Créer l'élément de trait progressif
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: -2px;
+                  left: 0;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = '100%';
+                }, 10);
+              } else {
+                e.target.style.transform = 'translateX(8px)';
+                
+                // Créer l'élément de trait progressif pour mobile
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline-mobile';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: 8px;
+                  left: 32px;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = 'calc(100% - 64px)';
+                }, 10);
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = '0 0 0 transparent';
+                
+                // Supprimer le trait progressif
+                const underline = e.target.querySelector('.progressive-underline');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              } else {
+                e.target.style.transform = 'translateX(0)';
+                
+                // Supprimer le trait progressif mobile
+                const underline = e.target.querySelector('.progressive-underline-mobile');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              }
+            }}
           >
             Contact
           </Link>
           <Link 
-            className="hover:text-indigo-600 transition-colors max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:rounded-lg max-md:hover:bg-gray-100 dark:max-md:hover:bg-gray-800" 
+            className="relative transition-all duration-300 max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:w-screen max-md:mb-2 max-md:-ml-8 max-md:pl-10 md:hover:scale-105 md:hover:-translate-y-0.5" 
             to="/blog"
             onClick={closeMenu}
+            style={{ 
+              color: isDark ? '#ffffff' : '#000000',
+              textShadow: '0 0 0 transparent'
+            }}
+            onMouseEnter={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = isDark ? '0 0 8px rgba(255, 255, 255, 0.3)' : '0 0 8px rgba(0, 0, 0, 0.3)';
+                e.target.style.color = isDark ? '#ffffff' : '#000000';
+                
+                // Créer l'élément de trait progressif
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: -2px;
+                  left: 0;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = '100%';
+                }, 10);
+              } else {
+                e.target.style.transform = 'translateX(8px)';
+                
+                // Créer l'élément de trait progressif pour mobile
+                const underline = document.createElement('div');
+                underline.className = 'progressive-underline-mobile';
+                underline.style.cssText = `
+                  position: absolute;
+                  bottom: 8px;
+                  left: 32px;
+                  height: 2px;
+                  width: 0;
+                  background-color: ${isDark ? '#ffffff' : '#000000'};
+                  transition: width 0.3s ease-out;
+                `;
+                e.target.appendChild(underline);
+                
+                // Animer la largeur
+                setTimeout(() => {
+                  underline.style.width = 'calc(100% - 64px)';
+                }, 10);
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (window.innerWidth >= 768) {
+                e.target.style.textShadow = '0 0 0 transparent';
+                
+                // Supprimer le trait progressif
+                const underline = e.target.querySelector('.progressive-underline');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              } else {
+                e.target.style.transform = 'translateX(0)';
+                
+                // Supprimer le trait progressif mobile
+                const underline = e.target.querySelector('.progressive-underline-mobile');
+                if (underline) {
+                  underline.style.width = '0';
+                  setTimeout(() => {
+                    if (underline.parentNode) {
+                      underline.parentNode.removeChild(underline);
+                    }
+                  }, 300);
+                }
+              }
+            }}
           >
             Blog
           </Link>
           
-          <button onClick={closeMenu} className="md:hidden text-black dark:text-white p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+          <button 
+            onClick={closeMenu} 
+            className="md:hidden p-3 rounded-full transition-colors"
+            style={{ 
+              color: isDark ? '#ffffff' : '#000000',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+            }}
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
               strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 18L18 6M6 6l12 12" />

@@ -2,11 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Navbar from './components/navbar';
-import Home from './pages/Home';
-import Projets from './pages/Projets';
-import Apropos from './pages/Apropos';
-import Contact from './pages/Contact';
-import Blog from './pages/Blog';
+import Home from './components/Home';
+import Projets from './components/Projets';
+import Apropos from './components/Apropos';
+import Contact from './components/Contact';
+import Blog from './components/Blog';
 
 function AppContent() {
   const { isDark } = useTheme();

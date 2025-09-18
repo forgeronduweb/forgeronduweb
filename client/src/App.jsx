@@ -7,6 +7,7 @@ import Projets from './components/Projets';
 import Apropos from './components/Apropos';
 import Contact from './components/Contact';
 import Blog from './components/Blog';
+import ProjetDetail from './pages/ProjetDetail';
 
 function AppContent() {
   const { isDark } = useTheme();
@@ -22,6 +23,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/projets" element={<div className="h-full overflow-auto"><Projets /></div>} />
+            <Route path="/projet/:id" element={<div className="h-full overflow-auto"><ProjetDetail /></div>} />
             <Route path="/apropos" element={<div className="h-full overflow-auto"><Apropos /></div>} />
             <Route path="/contact" element={<div className="h-full overflow-auto"><Contact /></div>} />
             <Route path="/blog" element={<div className="h-full overflow-auto"><Blog /></div>} />

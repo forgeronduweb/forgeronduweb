@@ -101,11 +101,11 @@ const Projets = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 lg:h-[calc(100vh-12rem)]">
           
           {/* Zone d'affichage des images - Gauche (masquée sur mobile) */}
           <div className="hidden lg:block lg:w-1/2">
-            <div className="sticky top-8">
+            <div className="h-full">
               <div 
                 className="relative w-full h-96 rounded-xl overflow-hidden border-2 transition-all duration-500"
                 style={{
@@ -183,8 +183,8 @@ const Projets = () => {
           </div>
 
           {/* Liste des projets - Droite (pleine largeur sur mobile) */}
-          <div className="w-full lg:w-1/2">
-            <div className="space-y-4">
+          <div className="w-full lg:w-1/2 lg:overflow-y-auto lg:h-full scrollbar-hide">
+            <div className="space-y-4 px-3 py-1">
               {projects.map((project, index) => (
                 <div
                   key={project.id}
@@ -207,7 +207,7 @@ const Projets = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 
-                          className="text-lg md:text-xl font-bold mb-1 transition-colors duration-300"
+                          className="text-lg md:text-xl font-bold transition-colors duration-300"
                           style={{ 
                             color: hoveredProject?.id === project.id 
                               ? (isDark ? '#ffffff' : '#1f2937')
@@ -216,16 +216,6 @@ const Projets = () => {
                         >
                           {project.title}
                         </h3>
-                        <p 
-                          className="text-sm leading-relaxed"
-                          style={{ 
-                            color: hoveredProject?.id === project.id 
-                              ? (isDark ? '#d1d5db' : '#4b5563')
-                              : (isDark ? '#9ca3af' : '#6b7280')
-                          }}
-                        >
-                          {project.description}
-                        </p>
                       </div>
                       <div className="ml-4 text-right">
                         <span 

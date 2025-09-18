@@ -16,7 +16,8 @@ const Projets = () => {
       technologies: ["React.js", "Node.js", "MongoDB"],
       category: "Full Stack",
       link: "https://personal-portfolio-353x.onrender.com/",
-      github: "https://github.com/forgeronduweb/saas-portfolio.git"
+      github: "https://github.com/forgeronduweb/saas-portfolio.git",
+      date: "Septembre 2024"
     },
     {
       id: 2,
@@ -25,7 +26,8 @@ const Projets = () => {
       image: "/projet_2.png",
       technologies: ["React", "Node.js", "MongoDB", "Mobile Money API"],
       category: "Full Stack",
-      link: "https://saas-freelance.onrender.com/"
+      link: "https://saas-freelance.onrender.com/",
+      date: "Août 2024"
     },
     {
       id: 3,
@@ -33,7 +35,8 @@ const Projets = () => {
       description: "API robuste pour application mobile avec authentification JWT",
       image: "/projet_1.png", // Utilise temporairement projet_1.png
       technologies: ["Node.js", "Express", "PostgreSQL", "JWT"],
-      category: "Backend"
+      category: "Backend",
+      date: "Juillet 2024"
     },
     {
       id: 4,
@@ -41,7 +44,8 @@ const Projets = () => {
       description: "Site portfolio responsive avec animations et design moderne",
       image: "/projet_2.png", // Utilise temporairement projet_2.png
       technologies: ["React", "Tailwind CSS", "Framer Motion"],
-      category: "Frontend"
+      category: "Frontend",
+      date: "Juin 2024"
     },
     {
       id: 5,
@@ -49,7 +53,8 @@ const Projets = () => {
       description: "Application de gestion de tâches avec collaboration en équipe",
       image: "/projet_1.png", // Utilise temporairement projet_1.png
       technologies: ["React", "Node.js", "Socket.io", "MongoDB"],
-      category: "Full Stack"
+      category: "Full Stack",
+      date: "Mai 2024"
     },
     {
       id: 6,
@@ -57,7 +62,8 @@ const Projets = () => {
       description: "Page d'atterrissage optimisée pour la conversion avec A/B testing",
       image: "/projet_2.png", // Utilise temporairement projet_2.png
       technologies: ["Next.js", "Tailwind CSS", "Vercel Analytics"],
-      category: "Frontend"
+      category: "Frontend",
+      date: "Avril 2024"
     }
   ];
 
@@ -207,7 +213,7 @@ const Projets = () => {
                       borderWidth: hoveredProject?.id === project.id ? '2px' : '1px'
                     }}
                   >
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between mb-0">
                       <div className="flex-1">
                         <h3 
                           className="text-lg md:text-xl font-bold transition-colors duration-300"
@@ -219,8 +225,16 @@ const Projets = () => {
                         >
                           {project.title}
                         </h3>
+                        {project.date && (
+                          <p 
+                            className="hidden sm:block text-xs leading-snug mt-3"
+                            style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                          >
+                            Publié: {project.date}
+                          </p>
+                        )}
                       </div>
-                      <div className="ml-4 flex items-center gap-2">
+                      <div className="ml-4 flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-2">
                         <span 
                           className="hidden sm:inline-flex text-[10px] md:text-xs px-2 py-0.5 rounded-full font-medium"
                           style={{
@@ -240,12 +254,13 @@ const Projets = () => {
                         >
                           {String(index + 1).padStart(2, '0')}
                         </span>
+                        {/* Date retirée ici sur mobile; déplacée en bas avec la catégorie */}
                       </div>
                     </div>
 
 
-                    {/* Catégorie visible en bas sur mobile */}
-                    <div className="sm:hidden mt-3">
+                    {/* Catégorie et date en bas sur mobile, sur la même ligne (date alignée à droite) */}
+                    <div className="sm:hidden mt-3 flex items-center w-full">
                       <span 
                         className="text-xs px-3 py-1 rounded-full font-medium"
                         style={{
@@ -256,6 +271,11 @@ const Projets = () => {
                       >
                         {project.category}
                       </span>
+                      {project.date && (
+                        <span className="text-[10px] ml-auto text-right" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
+                          Publié: {project.date}
+                        </span>
+                      )}
                     </div>
 
                     {/* Liens supprimés: la carte est cliquable */}

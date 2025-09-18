@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 const Projets = () => {
   const { isDark } = useTheme();
+  const [hoveredProject, setHoveredProject] = useState(null);
   const projects = [
     {
       id: 1,

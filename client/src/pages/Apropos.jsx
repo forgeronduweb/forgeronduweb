@@ -45,23 +45,26 @@ const Apropos = () => {
                 className="text-lg md:text-xl font-medium mb-6"
                 style={{ color: isDark ? '#ffffff' : '#000000' }}
               >
-                Salut, c'est Evrard 👋
+                Salut, moi c'est Evrard 👋
               </h2>
 
               <p className="mb-4 leading-relaxed">
-                Développeur Full Stack JavaScript freelance basé en Côte d'Ivoire. Je suis disponible pour la conception de solutions digitales modernes et performantes, afin de vous aider à atteindre vos objectifs.
+                Développeur Full Stack JavaScript, je conçois des solutions digitales modernes, utiles et accessibles à tous.
               </p>
               <p className="mb-4 leading-relaxed">
-                Spécialisé en <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>React</strong>, <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>Node.js</strong> et <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>TypeScript</strong>, je développe des applications rapides, fiables et évolutives, avec une attention particulière portée à l'expérience utilisateur.
+                Au fil de mon parcours, j'ai acquis une solide maîtrise de technologies comme <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>React</strong>, <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>Next.js</strong>, <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>Node.js</strong> et <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>MongoDB</strong>, que j'exploite pour créer aussi bien des applications Web performantes que des applications mobiles Android.
               </p>
               <p className="mb-4 leading-relaxed">
-                Diplômé d'une <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>Licence en Informatique et Sciences du Numérique</strong> (mention Bien), formé à l'<strong style={{ color: isDark ? '#ffffff' : '#000000' }}>Orange Digital Center</strong> et à <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>GoMyCode</strong>, et certifié en <strong style={{ color: isDark ? '#ffffff' : '#000000' }}>Développement Web & Mobile</strong>, je dispose d'une expertise complète couvrant tout le cycle de développement, du concept à la mise en ligne.
+                Mais au-delà du code, ce qui me motive vraiment, c'est d'apporter de la valeur :<br />
+                aider une entreprise à mieux communiquer grâce à un site clair et efficace,<br />
+                simplifier la gestion d'un business avec un tableau de bord sur-mesure,<br />
+                transformer une idée en solution concrète et impactante.
               </p>
               <p 
                 className="font-medium leading-relaxed"
                 style={{ color: isDark ? '#ffffff' : '#000000' }}
               >
-                👉 Si vous avez une idée ou un projet, je suis prêt à la transformer en une application web moderne et performante.
+                👉 Ici, sur mon portfolio/blog, vous trouverez mes projets, mes compétences et mes partages d'expériences, avec un objectif simple : allier code, design et impact.
               </p>
             </div>
 

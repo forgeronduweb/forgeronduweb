@@ -208,7 +208,7 @@ const Navbar = () => {
               }
             }}
           >
-            Apropos
+            À propos
           </Link>
           <Link 
             className="relative transition-all duration-300 max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:w-screen max-md:mb-2 max-md:-ml-8 max-md:pl-10 md:hover:scale-105 md:hover:-translate-y-0.5" 
@@ -298,7 +298,7 @@ const Navbar = () => {
           </Link>
           <Link 
             className="relative transition-all duration-300 max-md:text-lg max-md:font-medium max-md:py-3 max-md:px-6 max-md:w-screen max-md:mb-2 max-md:-ml-8 max-md:pl-10 md:hover:scale-105 md:hover:-translate-y-0.5" 
-            to="/blog"
+            to="#"
             onClick={closeMenu}
             style={{ 
               color: isDark ? '#ffffff' : '#000000',

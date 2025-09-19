@@ -1,74 +1,111 @@
-import { useState } from 'react'
-import { Save, User, Lock, Globe, Bell, Palette, Shield } from 'lucide-react'
+import React, { useState } from 'react'
+import { Save, User, Lock, Bell, Palette, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-export default function Settings() {
+const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile')
-  const [settings, setSettings] = useState({
-    // Profile
-    name: 'Administrateur',
+  const [isSaving, setIsSaving] = useState(false)
+  
+  const [profileData, setProfileData] = useState({
+    name: 'Forgeron du Web',
     email: 'admin@forgeron.dev',
-    bio: 'Développeur web passionné par les technologies modernes',
-    website: 'https://forgeron.dev',
-    location: 'France',
-    
-    // Security
+    bio: 'Développeur Full Stack passionné par les technologies web modernes.',
+    website: 'https://forgeron-du-web.com',
+    location: 'France'
+  })
+
+  const [securityData, setSecurityData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-    twoFactorEnabled: false,
-    
-    // Notifications
+    confirmPassword: ''
+  })
+
+  const [notificationData, setNotificationData] = useState({
     emailNotifications: true,
-    projectUpdates: true,
-    securityAlerts: true,
-    marketingEmails: false,
-    
-    // Appearance
-    theme: 'light',
-    language: 'fr',
-    
-    // Site
-    siteTitle: 'Forgeron du Web',
-    siteDescription: 'Portfolio de développeur web',
-    maintenanceMode: false,
-    analyticsEnabled: true
+    newMessages: true,
+    projectUpdates: false,
+    weeklyReport: true
   })
 
   const tabs = [
-    { id: 'profile', name: 'Profil', icon: User },
-    { id: 'security', name: 'Sécurité', icon: Lock },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'appearance', name: 'Apparence', icon: Palette },
-    { id: 'site', name: 'Site', icon: Globe }
+    { id: 'profile', label: 'Profil', icon: User },
+    { id: 'security', label: 'Sécurité', icon: Lock },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'appearance', label: 'Apparence', icon: Palette },
+    { id: 'general', label: 'Général', icon: Globe }
   ]
 
-  const handleSave = (section) => {
-    // Ici vous pourriez envoyer les données à votre API
-    toast.success(`Paramètres ${section} sauvegardés avec succès`)
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault()
-    
-    if (settings.newPassword !== settings.confirmPassword) {
+  const handleSecurityChange = (e) => {
+    const { name, value } = e.target
+    setSecurityData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleNotificationChange = (e) => {
+    const { name, checked } = e.target
+    setNotificationData(prev => ({
+      ...prev,
+      [name]: checked
+    }))
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true)
+      // Simuler une sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      toast.success('Profil mis à jour avec succès')
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour du profil')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSaveSecurity = async () => {
+    if (securityData.newPassword !== securityData.confirmPassword) {
       toast.error('Les mots de passe ne correspondent pas')
       return
     }
     
-    if (settings.newPassword.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères')
-      return
+    try {
+      setIsSaving(true)
+      // Simuler une sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      setSecurityData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+      toast.success('Mot de passe mis à jour avec succès')
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour du mot de passe')
+    } finally {
+      setIsSaving(false)
     }
-    
-    // Ici vous pourriez envoyer la demande de changement de mot de passe
-    toast.success('Mot de passe modifié avec succès')
-    setSettings({
-      ...settings,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
+  }
+
+  const handleSaveNotifications = async () => {
+    try {
+      setIsSaving(true)
+      // Simuler une sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      toast.success('Préférences de notification mises à jour')
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour des notifications')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const renderTabContent = () => {
@@ -76,76 +113,90 @@ export default function Settings() {
       case 'profile':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="label">
-                  <span className="label-text">Nom complet</span>
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  value={settings.name}
-                  onChange={(e) => setSettings({...settings, name: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <label className="label">
-                  <span className="label-text">Email</span>
-                </label>
-                <input
-                  type="email"
-                  className="input input-bordered w-full"
-                  value={settings.email}
-                  onChange={(e) => setSettings({...settings, email: e.target.value})}
-                />
-              </div>
-            </div>
-
             <div>
-              <label className="label">
-                <span className="label-text">Biographie</span>
-              </label>
-              <textarea
-                className="textarea textarea-bordered w-full h-24"
-                value={settings.bio}
-                onChange={(e) => setSettings({...settings, bio: e.target.value})}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="label">
-                  <span className="label-text">Site web</span>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Informations personnelles
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nom complet
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={profileData.name}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={profileData.email}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Site web
+                  </label>
+                  <input
+                    type="url"
+                    name="website"
+                    value={profileData.website}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Localisation
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={profileData.location}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Bio
                 </label>
-                <input
-                  type="url"
-                  className="input input-bordered w-full"
-                  value={settings.website}
-                  onChange={(e) => setSettings({...settings, website: e.target.value})}
+                <textarea
+                  name="bio"
+                  value={profileData.bio}
+                  onChange={handleProfileChange}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
                 />
               </div>
-              
-              <div>
-                <label className="label">
-                  <span className="label-text">Localisation</span>
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  value={settings.location}
-                  onChange={(e) => setSettings({...settings, location: e.target.value})}
-                />
-              </div>
             </div>
-
             <div className="flex justify-end">
-              <button 
-                className="btn btn-primary"
-                onClick={() => handleSave('du profil')}
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
               >
-                <Save className="w-4 h-4" />
-                Sauvegarder
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Sauvegarde...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Sauvegarder
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -154,71 +205,67 @@ export default function Settings() {
       case 'security':
         return (
           <div className="space-y-6">
-            <div className="card bg-base-100 border border-base-300">
-              <div className="card-body">
-                <h3 className="card-title">Changer le mot de passe</h3>
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Mot de passe actuel</span>
-                    </label>
-                    <input
-                      type="password"
-                      className="input input-bordered w-full"
-                      value={settings.currentPassword}
-                      onChange={(e) => setSettings({...settings, currentPassword: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Nouveau mot de passe</span>
-                    </label>
-                    <input
-                      type="password"
-                      className="input input-bordered w-full"
-                      value={settings.newPassword}
-                      onChange={(e) => setSettings({...settings, newPassword: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Confirmer le nouveau mot de passe</span>
-                    </label>
-                    <input
-                      type="password"
-                      className="input input-bordered w-full"
-                      value={settings.confirmPassword}
-                      onChange={(e) => setSettings({...settings, confirmPassword: e.target.value})}
-                    />
-                  </div>
-                  
-                  <button type="submit" className="btn btn-primary">
-                    Changer le mot de passe
-                  </button>
-                </form>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Changer le mot de passe
+              </h3>
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Mot de passe actuel
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={securityData.currentPassword}
+                    onChange={handleSecurityChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nouveau mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={securityData.newPassword}
+                    onChange={handleSecurityChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Confirmer le nouveau mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={securityData.confirmPassword}
+                    onChange={handleSecurityChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
               </div>
             </div>
-
-            <div className="card bg-base-100 border border-base-300">
-              <div className="card-body">
-                <h3 className="card-title">Authentification à deux facteurs</h3>
-                <div className="form-control">
-                  <label className="label cursor-pointer">
-                    <span className="label-text">Activer l'authentification à deux facteurs</span>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={settings.twoFactorEnabled}
-                      onChange={(e) => setSettings({...settings, twoFactorEnabled: e.target.checked})}
-                    />
-                  </label>
-                </div>
-                <p className="text-sm text-base-content/70 mt-2">
-                  Ajoutez une couche de sécurité supplémentaire à votre compte
-                </p>
-              </div>
+            <div className="flex justify-end">
+              <button
+                onClick={handleSaveSecurity}
+                disabled={isSaving}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Sauvegarde...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Mettre à jour
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )
@@ -226,69 +273,99 @@ export default function Settings() {
       case 'notifications':
         return (
           <div className="space-y-6">
-            <div className="card bg-base-100 border border-base-300">
-              <div className="card-body">
-                <h3 className="card-title">Préférences de notification</h3>
-                <div className="space-y-4">
-                  <div className="form-control">
-                    <label className="label cursor-pointer">
-                      <span className="label-text">Notifications par email</span>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-primary"
-                        checked={settings.emailNotifications}
-                        onChange={(e) => setSettings({...settings, emailNotifications: e.target.checked})}
-                      />
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Préférences de notification
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Notifications par email
                     </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Recevoir des notifications par email
+                    </p>
                   </div>
-                  
-                  <div className="form-control">
-                    <label className="label cursor-pointer">
-                      <span className="label-text">Mises à jour des projets</span>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-primary"
-                        checked={settings.projectUpdates}
-                        onChange={(e) => setSettings({...settings, projectUpdates: e.target.checked})}
-                      />
-                    </label>
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label cursor-pointer">
-                      <span className="label-text">Alertes de sécurité</span>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-primary"
-                        checked={settings.securityAlerts}
-                        onChange={(e) => setSettings({...settings, securityAlerts: e.target.checked})}
-                      />
-                    </label>
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label cursor-pointer">
-                      <span className="label-text">Emails marketing</span>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-primary"
-                        checked={settings.marketingEmails}
-                        onChange={(e) => setSettings({...settings, marketingEmails: e.target.checked})}
-                      />
-                    </label>
-                  </div>
+                  <input
+                    type="checkbox"
+                    name="emailNotifications"
+                    checked={notificationData.emailNotifications}
+                    onChange={handleNotificationChange}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
                 </div>
-                
-                <div className="card-actions justify-end mt-6">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => handleSave('de notification')}
-                  >
-                    <Save className="w-4 h-4" />
-                    Sauvegarder
-                  </button>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Nouveaux messages
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Être notifié des nouveaux messages de contact
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="newMessages"
+                    checked={notificationData.newMessages}
+                    onChange={handleNotificationChange}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Mises à jour de projets
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Notifications lors de modifications de projets
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="projectUpdates"
+                    checked={notificationData.projectUpdates}
+                    onChange={handleNotificationChange}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Rapport hebdomadaire
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Recevoir un résumé hebdomadaire des activités
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="weeklyReport"
+                    checked={notificationData.weeklyReport}
+                    onChange={handleNotificationChange}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
                 </div>
               </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={handleSaveNotifications}
+                disabled={isSaving}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Sauvegarde...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Sauvegarder
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )
@@ -296,119 +373,28 @@ export default function Settings() {
       case 'appearance':
         return (
           <div className="space-y-6">
-            <div className="card bg-base-100 border border-base-300">
-              <div className="card-body">
-                <h3 className="card-title">Apparence</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Thème</span>
-                    </label>
-                    <select
-                      className="select select-bordered w-full max-w-xs"
-                      value={settings.theme}
-                      onChange={(e) => setSettings({...settings, theme: e.target.value})}
-                    >
-                      <option value="light">Clair</option>
-                      <option value="dark">Sombre</option>
-                      <option value="auto">Automatique</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Langue</span>
-                    </label>
-                    <select
-                      className="select select-bordered w-full max-w-xs"
-                      value={settings.language}
-                      onChange={(e) => setSettings({...settings, language: e.target.value})}
-                    >
-                      <option value="fr">Français</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="card-actions justify-end mt-6">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => handleSave('d\'apparence')}
-                  >
-                    <Save className="w-4 h-4" />
-                    Sauvegarder
-                  </button>
-                </div>
-              </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Apparence
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Les paramètres d'apparence sont gérés automatiquement par le système.
+                Le thème sombre/clair peut être basculé via l'icône en haut à droite.
+              </p>
             </div>
           </div>
         )
 
-      case 'site':
+      case 'general':
         return (
           <div className="space-y-6">
-            <div className="card bg-base-100 border border-base-300">
-              <div className="card-body">
-                <h3 className="card-title">Configuration du site</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Titre du site</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full"
-                      value={settings.siteTitle}
-                      onChange={(e) => setSettings({...settings, siteTitle: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Description du site</span>
-                    </label>
-                    <textarea
-                      className="textarea textarea-bordered w-full"
-                      value={settings.siteDescription}
-                      onChange={(e) => setSettings({...settings, siteDescription: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label cursor-pointer">
-                      <span className="label-text">Mode maintenance</span>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-warning"
-                        checked={settings.maintenanceMode}
-                        onChange={(e) => setSettings({...settings, maintenanceMode: e.target.checked})}
-                      />
-                    </label>
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label cursor-pointer">
-                      <span className="label-text">Analytics activé</span>
-                      <input
-                        type="checkbox"
-                        className="toggle toggle-primary"
-                        checked={settings.analyticsEnabled}
-                        onChange={(e) => setSettings({...settings, analyticsEnabled: e.target.checked})}
-                      />
-                    </label>
-                  </div>
-                </div>
-                
-                <div className="card-actions justify-end mt-6">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => handleSave('du site')}
-                  >
-                    <Save className="w-4 h-4" />
-                    Sauvegarder
-                  </button>
-                </div>
-              </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Paramètres généraux
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Les paramètres généraux seront disponibles dans une prochaine version.
+              </p>
             </div>
           </div>
         )
@@ -419,42 +405,48 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-base-content">Paramètres</h1>
-        <p className="text-base-content/70 mt-1">
-          Configurez votre compte et vos préférences
-        </p>
+    <div className="h-full flex flex-col">
+      {/* Header fixe */}
+      <div className="sticky top-0 bg-gray-50 dark:bg-gray-900 z-30 pb-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Paramètres
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Gérez vos préférences et paramètres de compte
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Tabs */}
-        <div className="lg:w-64">
-          <div className="menu bg-base-100 rounded-box shadow-sm">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <li key={tab.id}>
+      {/* Contenu scrollable */}
+      <div className="flex-1 overflow-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Navigation des onglets */}
+          <div className="lg:col-span-1">
+            <nav className="space-y-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                return (
                   <button
-                    className={`flex items-center gap-3 ${
-                      activeTab === tab.id ? 'active' : ''
-                    }`}
+                    key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    {tab.name}
+                    <Icon className="w-4 h-4 mr-3" />
+                    {tab.label}
                   </button>
-                </li>
-              )
-            })}
+                )
+              })}
+            </nav>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1">
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
+          {/* Contenu de l'onglet */}
+          <div className="lg:col-span-3">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               {renderTabContent()}
             </div>
           </div>
@@ -463,3 +455,5 @@ export default function Settings() {
     </div>
   )
 }
+
+export default Settings

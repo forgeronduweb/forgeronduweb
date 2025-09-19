@@ -1,165 +1,125 @@
-# Forgeron du Web - Admin Panel
+# Admin Panel - Forgeron du Web
 
-Panneau d'administration moderne pour gérer le portfolio Forgeron du Web.
+Panel d'administration pour le portfolio Forgeron du Web.
 
-## 🚀 Fonctionnalités
-
-- **Authentification sécurisée** avec gestion des sessions
-- **Dashboard** avec statistiques et aperçu des performances
-- **Gestion des projets** - Ajout, modification, suppression
-- **Gestion des compétences** - Organisation par catégories avec niveaux
-- **Paramètres** - Configuration du profil, sécurité, notifications
-- **Interface responsive** - Optimisée pour desktop et mobile
-- **Thème sombre/clair** - Basculement automatique
-- **Notifications toast** - Feedback utilisateur en temps réel
-
-## 🛠 Technologies utilisées
+## 🚀 Technologies utilisées
 
 - **React 19** - Framework frontend
 - **Vite** - Build tool et dev server
-- **React Router** - Navigation SPA
 - **Tailwind CSS** - Framework CSS utilitaire
-- **DaisyUI** - Composants UI prêts à l'emploi
-- **Lucide React** - Icônes modernes
+- **DaisyUI** - Composants UI pour Tailwind
+- **React Router** - Routage côté client
 - **React Hook Form** - Gestion des formulaires
 - **React Hot Toast** - Notifications
+- **Lucide React** - Icônes
 - **Axios** - Client HTTP
 
-## 🚀 Démarrage rapide
-
-### Prérequis
-- Node.js (version 18 ou supérieure)
-- npm ou yarn
-
-### Installation
-
-1. Installer les dépendances :
-```bash
-npm install
-```
-
-2. Démarrer le serveur de développement :
-```bash
-npm run dev
-```
-
-3. Ouvrir [http://localhost:3001](http://localhost:3001) dans votre navigateur
-
-### Build pour la production
-
-```bash
-npm run build
-```
-
-## 🔐 Authentification
-
-### Identifiants de test :
-- **Email** : `admin@forgeron.dev`
-- **Mot de passe** : `admin123`
-
-> ⚠️ **Important** : Changez ces identifiants en production !
-
-## 📋 Scripts disponibles
-
-- `npm run dev` - Démarre le serveur de développement
-- `npm run build` - Build pour la production
-- `npm run preview` - Prévisualise le build de production
-- `npm run lint` - Vérifie le code avec ESLint
-
-## 🏗 Structure du projet
+## 📁 Structure du projet
 
 ```
 admin/
-├── public/                 # Fichiers statiques
 ├── src/
-│   ├── components/        # Composants réutilisables
-│   │   ├── auth/         # Composants d'authentification
-│   │   ├── dashboard/    # Composants du dashboard
-│   │   └── layout/       # Composants de mise en page
-│   ├── contexts/         # Contextes React
-│   ├── pages/            # Pages principales
-│   ├── App.jsx           # Composant racine
-│   ├── main.jsx          # Point d'entrée
-│   └── index.css         # Styles globaux
-├── index.html            # Template HTML
-├── package.json          # Dépendances et scripts
-├── tailwind.config.js    # Configuration Tailwind
-├── vite.config.js        # Configuration Vite
-└── README.md            # Documentation
+│   ├── components/          # Composants réutilisables
+│   │   ├── Layout/         # Layout principal (Sidebar, Header)
+│   │   └── ProtectedRoute.jsx
+│   ├── contexts/           # Contextes React
+│   │   └── AuthContext.jsx
+│   ├── pages/              # Pages de l'application
+│   │   ├── Dashboard.jsx   # Tableau de bord
+│   │   ├── Login.jsx       # Page de connexion
+│   │   ├── Projects.jsx    # Gestion des projets
+│   │   ├── Articles.jsx    # Gestion des articles
+│   │   └── Messages.jsx    # Messages de contact
+│   ├── services/           # Services API
+│   │   └── api.js
+│   ├── App.jsx            # Composant principal
+│   └── main.jsx           # Point d'entrée
+├── .env                   # Variables d'environnement
+├── package.json
+├── tailwind.config.js
+└── vite.config.js
 ```
 
-## 🎨 Personnalisation
+## 🔧 Installation et démarrage
 
-### Thèmes
-Le projet utilise DaisyUI avec support des thèmes clair/sombre. Vous pouvez personnaliser les couleurs dans `tailwind.config.js`.
+1. **Installer les dépendances :**
+   ```bash
+   npm install
+   ```
 
-### Composants
-Tous les composants sont modulaires et réutilisables. Ils suivent les conventions React modernes avec hooks.
+2. **Démarrer le serveur de développement :**
+   ```bash
+   npm run dev
+   ```
+   L'application sera accessible sur `http://localhost:3001`
 
-## 🔗 Intégration avec le backend
+3. **Build pour la production :**
+   ```bash
+   npm run build
+   ```
 
-L'admin est conçu pour fonctionner avec l'API backend sur le port 5000. Assurez-vous que le serveur backend est démarré.
+## 🔐 Authentification
 
-### Configuration API
-Modifiez les URLs d'API dans les composants selon votre configuration backend.
+**Identifiants de test :**
+- Email : `admin@forgeron.dev`
+- Mot de passe : `admin123`
+
+## 📋 Fonctionnalités
+
+### ✅ Implémentées
+- 🔐 Système d'authentification
+- 📊 Tableau de bord avec statistiques
+- 📁 Gestion des projets (liste, visualisation)
+- 📝 Gestion des articles de blog (liste, visualisation)
+- 💬 Gestion des messages de contact
+- 🎨 Interface responsive avec thème sombre/clair
+- 🔍 Recherche et filtrage
+- 📱 Design mobile-first
+
+### 🚧 À implémenter
+- ✏️ Formulaires de création/édition des projets
+- ✏️ Formulaires de création/édition des articles
+- 📊 Page de statistiques détaillées
+- ⚙️ Page de paramètres
+- 🔄 Intégration API backend complète
+- 📤 Upload d'images
+- 📧 Système de réponse aux messages
+
+## 🌐 API
+
+L'admin communique avec l'API backend sur `http://localhost:5000/api/v1`
+
+### Endpoints utilisés :
+- `GET /projects` - Liste des projets
+- `GET /articles` - Liste des articles
+- `GET /contact/messages` - Messages de contact
+- `POST /auth/login` - Authentification
+- `GET /admin/stats` - Statistiques
+
+## 🎨 Interface
+
+- **Design moderne** avec Tailwind CSS et DaisyUI
+- **Thème adaptatif** (clair/sombre)
+- **Navigation intuitive** avec sidebar responsive
+- **Notifications** avec React Hot Toast
+- **Icônes** avec Lucide React
 
 ## 📱 Responsive Design
 
-L'interface s'adapte automatiquement aux différentes tailles d'écran :
-- **Desktop** : Layout complet avec sidebar
-- **Tablet** : Layout adaptatif
-- **Mobile** : Menu hamburger et navigation optimisée
+L'interface s'adapte automatiquement :
+- **Mobile** : Navigation en overlay
+- **Tablet** : Layout adapté
+- **Desktop** : Sidebar fixe
 
-## 🚀 Déploiement
+## 🔄 État de développement
 
-### Build de production
-```bash
-npm run build
-```
+Le projet est en cours de développement. Les fonctionnalités de base sont implémentées avec des données simulées. L'intégration avec l'API backend sera ajoutée progressivement.
 
-### Serveur statique
-Le dossier `dist/` contient les fichiers optimisés pour la production.
+## 🚀 Prochaines étapes
 
-### Variables d'environnement
-Créez un fichier `.env` pour la configuration :
-```env
-VITE_API_URL=http://localhost:5000
-VITE_APP_TITLE=Admin - Forgeron du Web
-```
-
-## 🔧 Développement
-
-### Ajout de nouvelles pages
-1. Créer le composant dans `src/pages/`
-2. Ajouter la route dans `App.jsx`
-3. Ajouter le lien dans `Sidebar.jsx`
-
-### Ajout de nouvelles fonctionnalités
-1. Créer les composants nécessaires
-2. Ajouter les contextes si besoin
-3. Intégrer avec l'API backend
-4. Ajouter les tests
-
-## 📝 TODO
-
-- [ ] Tests unitaires avec Vitest
-- [ ] Tests d'intégration
-- [ ] Gestion des erreurs avancée
-- [ ] Optimisation des performances
-- [ ] PWA (Progressive Web App)
-- [ ] Internationalisation (i18n)
-- [ ] Mode hors ligne
-- [ ] Upload de fichiers
-- [ ] Éditeur WYSIWYG
-
-## 🤝 Contribution
-
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+1. Installer les dépendances : `npm install`
+2. Démarrer l'application : `npm run dev`
+3. Se connecter avec les identifiants de test
+4. Tester les différentes sections de l'admin
+5. Implémenter les formulaires de création/édition
+6. Connecter à l'API backend réelle

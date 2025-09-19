@@ -1,9 +1,10 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { apiService } from '../services/api'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext()
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
@@ -11,77 +12,69 @@ export function useAuth() {
   return context
 }
 
-export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Vérifier si l'utilisateur est connecté au chargement
   useEffect(() => {
-    const token = localStorage.getItem('admin_token')
-    const userData = localStorage.getItem('admin_user')
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData)
-        setUser(parsedUser)
-        setIsAuthenticated(true)
-      } catch (error) {
-        console.error('Erreur lors du parsing des données utilisateur:', error)
-        localStorage.removeItem('admin_token')
-        localStorage.removeItem('admin_user')
-      }
-    }
-    
-    setLoading(false)
+    checkAuthStatus()
   }, [])
 
-  const login = async (email, password) => {
+  const checkAuthStatus = () => {
+    const token = localStorage.getItem('admin_token')
+    if (token) {
+      // Ici, vous pourriez vérifier la validité du token avec l'API
+      setIsAuthenticated(true)
+      setUser({ email: 'admin@forgeron.dev', role: 'admin' })
+    }
+    setIsLoading(false)
+  }
+
+  const login = async (credentials) => {
     try {
-      // Simulation d'une authentification (à remplacer par un vrai appel API)
-      if (email === 'admin@forgeron.dev' && password === 'admin123') {
-        const userData = {
-          id: 1,
-          email: 'admin@forgeron.dev',
-          name: 'Administrateur',
-          role: 'admin'
-        }
-        
-        const token = 'fake-jwt-token-' + Date.now()
-        
-        localStorage.setItem('admin_token', token)
-        localStorage.setItem('admin_user', JSON.stringify(userData))
-        
-        setUser(userData)
-        setIsAuthenticated(true)
-        
-        toast.success('Connexion réussie !')
-        return { success: true }
-      } else {
-        toast.error('Identifiants incorrects')
-        return { success: false, error: 'Identifiants incorrects' }
-      }
+      setIsLoading(true)
+      const response = await apiService.login(credentials)
+      const { token, user } = response.data.data || response.data
+
+      if (!token) throw new Error("Token d'authentification manquant")
+
+      localStorage.setItem('admin_token', token)
+      setIsAuthenticated(true)
+      setUser(user || { email: credentials.email, role: 'admin' })
+      toast.success('Connexion réussie !')
+      return { success: true }
     } catch (error) {
-      console.error('Erreur de connexion:', error)
-      toast.error('Erreur de connexion')
-      return { success: false, error: 'Erreur de connexion' }
+      const apiMessage = error.response?.data?.error || error.response?.data?.message
+      const message = apiMessage || error.message || 'Erreur de connexion'
+      toast.error(message)
+      return { success: false, error: message }
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const logout = () => {
-    localStorage.removeItem('admin_token')
-    localStorage.removeItem('admin_user')
-    setUser(null)
-    setIsAuthenticated(false)
-    toast.success('Déconnexion réussie')
+  const logout = async () => {
+    try {
+      await apiService.logout()
+      setIsAuthenticated(false)
+      setUser(null)
+      toast.success('Déconnexion réussie')
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error)
+      // Déconnecter quand même localement
+      setIsAuthenticated(false)
+      setUser(null)
+    }
   }
 
   const value = {
-    isAuthenticated,
     user,
-    loading,
+    isAuthenticated,
+    isLoading,
     login,
-    logout
+    logout,
+    checkAuthStatus
   }
 
   return (
@@ -90,3 +83,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
+
+export default AuthContext

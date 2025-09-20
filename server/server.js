@@ -920,11 +920,14 @@ connectDB().then(async () => {
     }
   }
 
-  app.listen(PORT, config.server.host, () => {
+  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : config.server.host;
+  
+  app.listen(PORT, host, () => {
     console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    console.log(`🌐 Host: ${config.server.host}`);
+    console.log(`🌐 Host: ${host}`);
     console.log(`🌐 URL: ${config.server.nodeEnv === 'production' ? 'https://forgeron-du-web-api.onrender.com' : `http://localhost:${PORT}`}`);
     console.log(`📊 Environnement: ${config.server.nodeEnv}`);
+    console.log(`🔗 MongoDB: ${mongoose.connection.name} sur ${mongoose.connection.host}`);
   });
 });
 

@@ -15,6 +15,8 @@ export const config = {
   // Base de données
   database: {
     mongoUri: process.env.MONGODB_URI,
+    // Assurer que la base de données est spécifiée
+    dbName: process.env.DB_NAME || 'forgeron_du_web'
   },
 
   // URLs des applications

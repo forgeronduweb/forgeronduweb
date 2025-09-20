@@ -59,7 +59,7 @@ app.use(helmet());
 // Configuration CORS pour permettre les requêtes du client React et de l'admin
 const allowedOrigins = process.env.CORS_ORIGIN 
   ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:5173', 'http://localhost:3001'];
+  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'];
 
 app.use(cors({
   origin: allowedOrigins,
@@ -76,23 +76,40 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 // Logging des requêtes
 app.use(morgan('combined'));
 
-// Connexion à MongoDB avec variables d'environnement uniquement
+// Connexion à MongoDB Atlas avec variables d'environnement
 const connectDB = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      console.warn('⚠️ MONGODB_URI non définie dans le fichier .env');
-      console.warn('💡 Ajoutez: MONGODB_URI=mongodb://localhost:27017/forgeronwebbd');
-      console.warn('🔄 Le serveur fonctionne en mode données simulées');
-      return;
+      console.error('❌ MONGODB_URI non définie dans le fichier .env');
+      console.error('💡 Ajoutez: MONGODB_URI=mongodb+srv://...');
+      process.exit(1);
     }
     
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('🍃 MongoDB connecté avec succès');
+    // Options de connexion pour MongoDB Atlas
+    const options = {
+      serverSelectionTimeoutMS: 5000, // Timeout après 5s
+      socketTimeoutMS: 45000, // Fermer les sockets après 45s d'inactivité
+    };
+    
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    
+    console.log('🍃 MongoDB Atlas connecté avec succès');
     console.log(`📊 Base de données: ${mongoose.connection.name}`);
+    console.log(`🌐 Cluster: ${mongoose.connection.host}`);
+    
   } catch (error) {
-    console.error('❌ Erreur de connexion MongoDB:', error.message);
+    console.error('❌ Erreur de connexion MongoDB Atlas:', error.message);
+    
+    if (error.message.includes('authentication failed')) {
+      console.error('🔐 Erreur d\'authentification - Vérifiez vos identifiants MongoDB');
+    } else if (error.message.includes('network')) {
+      console.error('🌐 Erreur réseau - Vérifiez votre connexion internet');
+    } else if (error.message.includes('timeout')) {
+      console.error('⏱️ Timeout de connexion - Le cluster MongoDB est-il accessible ?');
+    }
+    
     console.error('💡 Vérifiez votre variable MONGODB_URI dans le fichier .env');
-    console.warn('🔄 Le serveur continue en mode données simulées');
+    process.exit(1);
   }
 };
 
@@ -117,41 +134,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Données simulées (à remplacer par une vraie base de données)
-let projects = [
-  {
-    id: 1,
-    title: 'Site E-commerce React',
-    description: 'Plateforme de vente en ligne moderne avec panier et paiement',
-    technologies: ['React', 'Node.js', 'MongoDB', 'Stripe'],
-    status: 'Terminé',
-    image: '/api/placeholder/300/200',
-    url: 'https://example.com',
-    github: 'https://github.com/user/project',
-    createdAt: '2024-01-15'
-  },
-  {
-    id: 2,
-    title: 'Dashboard Analytics',
-    description: 'Interface d\'administration avec graphiques et statistiques',
-    technologies: ['Vue.js', 'Express', 'PostgreSQL', 'Chart.js'],
-    status: 'En cours',
-    image: '/api/placeholder/300/200',
-    url: 'https://example2.com',
-    github: 'https://github.com/user/project2',
-    createdAt: '2024-02-10'
-  }
-];
-
-let skills = [
-  { id: 1, name: 'React', level: 90, category: 'Frontend', icon: 'Code' },
-  { id: 2, name: 'Vue.js', level: 85, category: 'Frontend', icon: 'Code' },
-  { id: 3, name: 'Node.js', level: 88, category: 'Backend', icon: 'Server' },
-  { id: 4, name: 'MongoDB', level: 82, category: 'Database', icon: 'Database' }
-];
-
-let messages = [];
-let nextId = 3;
+// Note: Toutes les données sont maintenant gérées par MongoDB Atlas
+// Plus de données simulées nécessaires
 
 // Middleware pour toutes les routes API
 app.use('/api/v1', (req, res, next) => {
@@ -201,11 +185,20 @@ app.get('/api/v1/projects/:id', async (req, res) => {
 });
 
 // Routes pour les compétences (publiques)
-app.get('/api/v1/skills', (req, res) => {
-  res.json({
-    success: true,
-    data: skills
-  });
+app.get('/api/v1/skills', async (req, res) => {
+  try {
+    const skills = await Skill.find().sort({ category: 1, order: 1 });
+    res.json({
+      success: true,
+      data: skills
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des compétences:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur lors de la récupération des compétences'
+    });
+  }
 });
 
 // Routes pour les articles (publiques)
@@ -323,6 +316,32 @@ app.post('/api/v1/contact', async (req, res) => {
 
 // ===== ROUTES ADMIN =====
 
+// Middleware simple d'authentification pour les routes admin
+const adminAuth = (req, res, next) => {
+  // Vérification basique avec les variables d'environnement
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({
+      success: false,
+      error: 'Token d\'authentification requis'
+    });
+  }
+  
+  // Pour la démo, on accepte le token mock
+  // En production, vérifiez le JWT ici avec process.env.JWT_SECRET
+  const token = authHeader.replace('Bearer ', '');
+  
+  if (token === 'mock-admin-token' || token.startsWith('mock-admin-token-')) {
+    next();
+  } else {
+    return res.status(401).json({
+      success: false,
+      error: 'Token d\'authentification invalide'
+    });
+  }
+};
+
 // Route d'upload d'images pour les projets
 app.post('/api/v1/admin/upload/project-images', adminAuth, upload.array('images', 4), (req, res) => {
   try {
@@ -389,32 +408,6 @@ app.post('/api/v1/admin/login', (req, res) => {
     });
   }
 });
-
-// Middleware simple d'authentification pour les routes admin
-const adminAuth = (req, res, next) => {
-  // Vérification basique avec les variables d'environnement
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader) {
-    return res.status(401).json({
-      success: false,
-      error: 'Token d\'authentification requis'
-    });
-  }
-  
-  // Pour la démo, on accepte le token mock
-  // En production, vérifiez le JWT ici avec process.env.JWT_SECRET
-  const token = authHeader.replace('Bearer ', '');
-  
-  if (token === 'mock-admin-token' || token.startsWith('mock-admin-token-')) {
-    next();
-  } else {
-    return res.status(401).json({
-      success: false,
-      error: 'Token d\'authentification invalide'
-    });
-  }
-};
 
 // Routes admin pour les projets
 app.get('/api/v1/admin/projects', adminAuth, async (req, res) => {
@@ -655,55 +648,111 @@ app.delete('/api/v1/admin/articles/:id', adminAuth, async (req, res) => {
 });
 
 // Routes admin pour les compétences
-app.get('/api/v1/admin/skills', adminAuth, (req, res) => {
-  res.json({
-    success: true,
-    data: skills
-  });
-});
-
-app.post('/api/v1/admin/skills', adminAuth, (req, res) => {
-  const newSkill = {
-    id: nextId++,
-    ...req.body
-  };
-  skills.push(newSkill);
-  res.status(201).json({
-    success: true,
-    data: newSkill
-  });
-});
-
-app.put('/api/v1/admin/skills/:id', adminAuth, (req, res) => {
-  const index = skills.findIndex(s => s.id === parseInt(req.params.id));
-  if (index === -1) {
-    return res.status(404).json({
+app.get('/api/v1/admin/skills', adminAuth, async (req, res) => {
+  try {
+    const skills = await Skill.find().sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      data: skills
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des compétences:', error);
+    res.status(500).json({
       success: false,
-      error: 'Compétence non trouvée'
+      error: 'Erreur serveur lors de la récupération des compétences'
     });
   }
-  
-  skills[index] = { ...skills[index], ...req.body };
-  res.json({
-    success: true,
-    data: skills[index]
-  });
 });
 
-app.delete('/api/v1/admin/skills/:id', adminAuth, (req, res) => {
-  const index = skills.findIndex(s => s.id === parseInt(req.params.id));
-  if (index === -1) {
-    return res.status(404).json({
+app.get('/api/v1/admin/skills/:id', adminAuth, async (req, res) => {
+  try {
+    const skill = await Skill.findById(req.params.id);
+    if (!skill) {
+      return res.status(404).json({
+        success: false,
+        error: 'Compétence non trouvée'
+      });
+    }
+    res.json({
+      success: true,
+      data: skill
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la compétence:', error);
+    res.status(500).json({
       success: false,
-      error: 'Compétence non trouvée'
+      error: 'Erreur serveur lors de la récupération de la compétence'
     });
   }
-  
-  skills.splice(index, 1);
-  res.json({
-    success: true,
-    message: 'Compétence supprimée avec succès'
-  });
+});
+
+app.post('/api/v1/admin/skills', adminAuth, async (req, res) => {
+  try {
+    const newSkill = new Skill(req.body);
+    const savedSkill = await newSkill.save();
+    res.status(201).json({
+      success: true,
+      data: savedSkill
+    });
+  } catch (error) {
+    console.error('Erreur lors de la création de la compétence:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Erreur lors de la création de la compétence'
+    });
+  }
+});
+
+app.put('/api/v1/admin/skills/:id', adminAuth, async (req, res) => {
+  try {
+    const updatedSkill = await Skill.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedSkill) {
+      return res.status(404).json({
+        success: false,
+        error: 'Compétence non trouvée'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: updatedSkill
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la compétence:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Erreur lors de la mise à jour de la compétence'
+    });
+  }
+});
+
+app.delete('/api/v1/admin/skills/:id', adminAuth, async (req, res) => {
+  try {
+    const deletedSkill = await Skill.findByIdAndDelete(req.params.id);
+    
+    if (!deletedSkill) {
+      return res.status(404).json({
+        success: false,
+        error: 'Compétence non trouvée'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Compétence supprimée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la compétence:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur lors de la suppression de la compétence'
+    });
+  }
 });
 
 // Routes admin pour les messages
@@ -729,8 +778,7 @@ app.patch('/api/v1/admin/messages/:id/read', adminAuth, async (req, res) => {
       req.params.id,
       { 
         read: true, 
-        readAt: new Date(),
-        status: 'read'
+        readAt: new Date() 
       },
       { new: true }
     );
@@ -750,7 +798,34 @@ app.patch('/api/v1/admin/messages/:id/read', adminAuth, async (req, res) => {
     console.error('Erreur lors de la mise à jour du message:', error);
     res.status(500).json({
       success: false,
-      error: 'Erreur serveur lors de la mise à jour du message'
+      error: 'Erreur lors de la mise à jour du message'
+    });
+  }
+});
+
+app.delete('/api/v1/admin/messages/:id', adminAuth, async (req, res) => {
+  try {
+    const deletedMessage = await Message.findByIdAndDelete(req.params.id);
+    
+    if (!deletedMessage) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message non trouvé'
+      });
+    }
+    
+    console.log('Message supprimé:', deletedMessage);
+    
+    res.json({
+      success: true,
+      message: 'Message supprimé avec succès',
+      data: deletedMessage
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du message:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur lors de la suppression du message'
     });
   }
 });

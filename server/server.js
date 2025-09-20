@@ -1,24 +1,37 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Charger les variables d'environnement
 dotenv.config();
 
-// Importer les modèles
+// Configuration centralisée
+import { config, validateConfig } from './config/config.js';
+
+// Système de migration
+import { runMigrations } from './migrations/migrator.js';
+
+// Importation des modèles
 import Project from './models/Project.js';
-import Message from './models/Message.js';
 import Skill from './models/Skill.js';
+import Message from './models/Message.js';
 import Article from './models/Article.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.server.port;
+
+// Valider la configuration au démarrage
+if (!validateConfig()) {
+  console.error('❌ Configuration invalide, arrêt du serveur');
+  process.exit(1);
+}
 
 // Configuration pour les modules ES6
 const __filename = fileURLToPath(import.meta.url);
@@ -48,8 +61,8 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max
-    files: 4 // Maximum 4 fichiers
+    fileSize: config.upload.maxSize,
+    files: config.upload.maxFiles
   }
 });
 
@@ -57,9 +70,7 @@ const upload = multer({
 app.use(helmet());
 
 // Configuration CORS pour permettre les requêtes du client React et de l'admin
-const allowedOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'];
+const allowedOrigins = config.urls.corsOrigins;
 
 app.use(cors({
   origin: allowedOrigins,
@@ -91,7 +102,7 @@ const connectDB = async () => {
       socketTimeoutMS: 45000, // Fermer les sockets après 45s d'inactivité
     };
     
-    await mongoose.connect(process.env.MONGODB_URI, options);
+    await mongoose.connect(config.database.mongoUri, options);
     
     console.log('🍃 MongoDB Atlas connecté avec succès');
     console.log(`📊 Base de données: ${mongoose.connection.name}`);
@@ -125,17 +136,31 @@ app.get('/', (req, res) => {
   });
 });
 
-// Route de santé
+// Route de santé pour vérifier que l'API fonctionne
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
+  res.json({ 
+    status: 'OK', 
+    message: 'API Forgeron du Web fonctionnelle',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    environment: config.server.nodeEnv
   });
 });
 
-// Note: Toutes les données sont maintenant gérées par MongoDB Atlas
-// Plus de données simulées nécessaires
+// Endpoint pour les informations publiques de configuration
+app.get('/api/v1/config', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      contact: config.contact,
+      social: config.social,
+      developer: config.developer,
+      urls: {
+        client: config.urls.client,
+        admin: config.urls.admin
+      }
+    }
+  });
+});
 
 // Middleware pour toutes les routes API
 app.use('/api/v1', (req, res, next) => {
@@ -384,8 +409,8 @@ app.post('/api/v1/admin/login', (req, res) => {
   const { email, password } = req.body;
   
   // Vérifier avec les variables d'environnement
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@forgeron.dev';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminEmail = config.auth.adminEmail;
+  const adminPassword = config.auth.adminPassword;
   
   if (email === adminEmail && password === adminPassword) {
     // En production, générez un vrai JWT avec process.env.JWT_SECRET
@@ -882,11 +907,25 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`🌐 URL: http://localhost:${PORT}`);
-  console.log(`📊 Environnement: ${process.env.NODE_ENV || 'development'}`);
+// Démarrer le serveur après connexion à la base de données
+connectDB().then(async () => {
+  // Exécuter les migrations automatiquement au démarrage
+  if (config.server.nodeEnv === 'development') {
+    console.log('🔄 Exécution des migrations...');
+    try {
+      await runMigrations();
+    } catch (error) {
+      console.error('❌ Erreur lors des migrations:', error.message);
+      // En développement, on continue même si les migrations échouent
+    }
+  }
+
+  app.listen(PORT, config.server.host, () => {
+    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+    console.log(`🌐 Host: ${config.server.host}`);
+    console.log(`🌐 URL: ${config.server.nodeEnv === 'production' ? 'https://forgeron-du-web-api.onrender.com' : `http://localhost:${PORT}`}`);
+    console.log(`📊 Environnement: ${config.server.nodeEnv}`);
+  });
 });
 
 // Gestion gracieuse de l'arrêt

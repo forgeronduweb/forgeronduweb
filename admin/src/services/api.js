@@ -84,6 +84,7 @@ export const apiService = {
   // Messages de contact (routes admin)
   getContactMessages: () => api.get('/admin/messages'),
   markMessageAsRead: (id) => api.patch(`/admin/messages/${id}/read`),
+  deleteMessage: (id) => api.delete(`/admin/messages/${id}`),
 
   // Statistiques du dashboard
   getDashboardStats: () => api.get('/admin/dashboard/stats'),

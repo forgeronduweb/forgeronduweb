@@ -31,12 +31,12 @@ const Projets = () => {
     },
     {
       id: 3,
-      title: "API Mobile",
-      description: "API robuste pour application mobile avec authentification JWT",
-      image: "/projet_1.png", // Utilise temporairement projet_1.png
-      technologies: ["Node.js", "Express", "PostgreSQL", "JWT"],
-      category: "Backend",
-      date: "Juillet 2024"
+      title: "Planify",
+      description: "Application web complète de gestion de tâches avec authentification sécurisée",
+      image: "public/planify/image_1.png", // Utilise temporairement projet_1.png
+      technologies: ["Next.js", "TypeScript", "PostgreSQL", "Prisma"],
+      category: "Full-Stack",
+      date: "Septembre 2024"
     },
     {
       id: 4,
@@ -69,7 +69,7 @@ const Projets = () => {
 
   return (
     <div 
-      className="min-h-screen overflow-y-auto py-4 transition-colors duration-300"
+      className="min-h-screen overflow-y-auto py-4 transition-colors duration-300 lg:h-screen lg:overflow-hidden lg:flex lg:flex-col"
       style={{ backgroundColor: isDark ? '#000000' : '#ffffff' }}
     >
       {/* Header */}
@@ -108,8 +108,8 @@ const Projets = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 lg:h-[calc(100vh-12rem)]">
+      <div className="max-w-7xl mx-auto px-4 lg:flex-1 lg:overflow-hidden w-full">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 lg:h-full">
           
           {/* Zone d'affichage des images - Gauche (masquée sur mobile) */}
           <div className="hidden lg:block lg:w-1/2">

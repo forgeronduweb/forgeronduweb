@@ -1,8 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Contact() {
   const { isDark } = useTheme();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/v1/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSubmitStatus({ type: 'success', message: 'Message envoyé avec succès !' });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setSubmitStatus({ type: 'error', message: data.message || 'Erreur lors de l\'envoi du message.' });
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setSubmitStatus({ 
+        type: 'error', 
+        message: 'Erreur de connexion au serveur.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div 
       className="h-screen flex flex-col py-4 transition-colors duration-300"
@@ -50,7 +99,20 @@ export default function Contact() {
                   backgroundColor: isDark ? '#1a1a1a' : '#f8f9fa'
                 }}
               >      
-                <form className="space-y-3 md:space-y-4">
+                {/* Status Message */}
+                {submitStatus && (
+                  <div 
+                    className={`mb-4 p-3 rounded-lg text-sm font-medium ${
+                      submitStatus.type === 'success' 
+                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                        : 'bg-red-100 text-red-800 border border-red-200'
+                    }`}
+                  >
+                    {submitStatus.message}
+                  </div>
+                )}
+
+                <form className="space-y-3 md:space-y-4" onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <label 
@@ -64,6 +126,8 @@ export default function Contact() {
                         type="text"
                         id="name"
                         name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
                         required
                         className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg focus:ring-2 transition-all duration-200 text-sm md:text-base focus:outline-none hover:shadow-md"
                         style={{
@@ -87,6 +151,8 @@ export default function Contact() {
                         type="email"
                         id="email"
                         name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
                         required
                         className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg focus:ring-2 transition-all duration-200 text-sm md:text-base focus:outline-none hover:shadow-md"
                         style={{
@@ -111,6 +177,8 @@ export default function Contact() {
                       type="text"
                       id="subject"
                       name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
                       required
                       className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg focus:ring-2 transition-all duration-200 text-sm md:text-base focus:outline-none hover:shadow-md"
                       style={{
@@ -133,6 +201,8 @@ export default function Contact() {
                     <textarea
                       id="message"
                       name="message"
+                      value={formData.message}
+                      onChange={handleInputChange}
                       required
                       rows={3}
                       className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-all duration-200 resize-none text-sm focus:outline-none hover:shadow-md"
@@ -147,22 +217,27 @@ export default function Contact() {
 
                   <button
                     type="submit"
-                    className="w-full py-2 px-6 rounded-lg font-medium focus:ring-2 focus:ring-offset-2 transition-all duration-200 active:scale-[0.98] border-2 text-sm hover:shadow-lg"
+                    disabled={isSubmitting}
+                    className="w-full py-2 px-6 rounded-lg font-medium focus:ring-2 focus:ring-offset-2 transition-all duration-200 active:scale-[0.98] border-2 text-sm hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       backgroundColor: isDark ? '#ffffff' : '#000000',
                       color: isDark ? '#000000' : '#ffffff',
                       borderColor: isDark ? '#ffffff' : '#000000'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = isDark ? '#e5e5e5' : '#374151';
-                      e.target.style.transform = 'translateY(-1px)';
+                      if (!isSubmitting) {
+                        e.target.style.backgroundColor = isDark ? '#e5e5e5' : '#374151';
+                        e.target.style.transform = 'translateY(-1px)';
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
-                      e.target.style.transform = 'translateY(0)';
+                      if (!isSubmitting) {
+                        e.target.style.backgroundColor = isDark ? '#ffffff' : '#000000';
+                        e.target.style.transform = 'translateY(0)';
+                      }
                     }}
                   >
-                    Envoyer le message
+                    {isSubmitting ? 'Envoi en cours...' : 'Envoyer le message'}
                   </button>
                 </form>
               </div>

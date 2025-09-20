@@ -55,23 +55,24 @@ const ProjetDetail = () => {
     },
     3: {
       id: 3,
-      title: "API Mobile",
-      description: "API robuste pour application mobile avec authentification JWT",
-      longDescription: "Une API REST complète développée pour supporter une application mobile native. Elle gère l'authentification sécurisée, la gestion des utilisateurs, et fournit des endpoints optimisés pour les performances mobiles.",
-      images: ["/projet_1.png", "/projet_2.png", "/projet_1.png"],
-      technologies: ["Node.js", "Express", "PostgreSQL", "JWT", "Redis"],
-      category: "Backend",
-      date: "Juillet 2024",
+      title: "Planify", 
+      description: "Application web complète de gestion de tâches avec authentification sécurisée",
+      longDescription: "Une application web full-stack développée avec Next.js 15 et TypeScript pour la gestion de tâches et de productivité. Elle intègre une authentification par cookies sécurisée, une base de données PostgreSQL sur Render, et une interface utilisateur moderne avec Tailwind CSS pour organiser efficacement les tâches personnelles et professionnelles.",
+      images: ["/planify/image_1.png", "/planify/image_2.png", "/planify/image_3.png" , "/planify/image_4.png"],
+      technologies: ["Next.js", "TypeScript", "PostgreSQL", "Prisma", "Tailwind CSS"],
+      category: "Full-Stack",
+      date: "Septembre 2024",
       features: [
-        "Authentification JWT",
+        "Authentification par cookies sécurisés",
         "Base de données PostgreSQL",
-        "Cache Redis",
-        "Documentation Swagger",
-        "Tests automatisés"
+        "Gestion complète des tâches",
+        "Système de catégories et priorités",
+        "Interface responsive moderne",
+        "Dashboard avec sidebar navigation"
       ],
-      challenges: "Optimisation des performances pour les connexions mobiles lentes et gestion de la sécurité.",
-      duration: "2 mois",
-      status: "En développement"
+      challenges: "Migration de SQLite vers PostgreSQL et gestion des types Next.js 15 pour les route handlers.",
+      duration: "1 mois",
+      status: "Terminé"
     },
     4: {
       id: 4,

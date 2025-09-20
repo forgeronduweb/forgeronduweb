@@ -1,16 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 const ContactModal = ({ isOpen, onClose }) => {
   const { isDark } = useTheme();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Ici vous pouvez ajouter la logique d'envoi du formulaire
-    console.log('Formulaire soumis');
-    onClose();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/v1/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          subject: 'Message via contact rapide'
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSubmitStatus({ type: 'success', message: 'Message envoyé avec succès !' });
+        setFormData({ name: '', email: '', message: '' });
+        setTimeout(() => {
+          onClose();
+          setSubmitStatus(null);
+        }, 2000);
+      } else {
+        setSubmitStatus({ type: 'error', message: data.message || 'Erreur lors de l\'envoi du message.' });
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setSubmitStatus({ 
+        type: 'error', 
+        message: 'Erreur de connexion au serveur.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -49,6 +97,19 @@ const ContactModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {/* Status Message */}
+        {submitStatus && (
+          <div 
+            className={`mb-4 p-3 rounded-lg text-sm font-medium ${
+              submitStatus.type === 'success' 
+                ? 'bg-green-100 text-green-800 border border-green-200' 
+                : 'bg-red-100 text-red-800 border border-red-200'
+            }`}
+          >
+            {submitStatus.message}
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -63,6 +124,8 @@ const ContactModal = ({ isOpen, onClose }) => {
               type="text"
               id="modal-name"
               name="name"
+              value={formData.name}
+              onChange={handleInputChange}
               required
               className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-colors text-sm focus:outline-none"
               style={{
@@ -86,6 +149,8 @@ const ContactModal = ({ isOpen, onClose }) => {
               type="email"
               id="modal-email"
               name="email"
+              value={formData.email}
+              onChange={handleInputChange}
               required
               className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-colors text-sm focus:outline-none"
               style={{
@@ -108,6 +173,8 @@ const ContactModal = ({ isOpen, onClose }) => {
             <textarea
               id="modal-message"
               name="message"
+              value={formData.message}
+              onChange={handleInputChange}
               required
               rows={3}
               className="w-full px-3 py-2 rounded-lg focus:ring-2 transition-colors resize-none text-sm focus:outline-none"
@@ -135,14 +202,15 @@ const ContactModal = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors border-2 text-sm"
+              disabled={isSubmitting}
+              className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors border-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: isDark ? '#ffffff' : '#000000',
                 color: isDark ? '#000000' : '#ffffff',
                 borderColor: isDark ? '#ffffff' : '#000000'
               }}
             >
-              Envoyer
+              {isSubmitting ? 'Envoi...' : 'Envoyer'}
             </button>
           </div>
         </form>

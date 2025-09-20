@@ -909,8 +909,8 @@ app.use((error, req, res, next) => {
 
 // Démarrer le serveur après connexion à la base de données
 connectDB().then(async () => {
-  // Exécuter les migrations automatiquement au démarrage
-  if (config.server.nodeEnv === 'development') {
+  // Exécuter les migrations automatiquement au démarrage (désactivé temporairement)
+  if (config.server.nodeEnv === 'development' && false) {
     console.log('🔄 Exécution des migrations...');
     try {
       await runMigrations();

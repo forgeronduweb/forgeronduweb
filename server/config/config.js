@@ -8,7 +8,7 @@ export const config = {
   // Serveur
   port: process.env.PORT || 5000,
   nodeEnv: process.env.NODE_ENV || 'development',
-  host: process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost',
+  host: '0.0.0.0', // Toujours écouter sur 0.0.0.0 pour Render
 
   // Base de données
   mongoUri: process.env.MONGODB_URI,

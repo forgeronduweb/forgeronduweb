@@ -111,9 +111,6 @@ const connectDB = async () => {
   }
 };
 
-// Initialiser la connexion DB
-connectDB();
-
 // Routes de base
 app.get('/', (req, res) => {
   res.json({
@@ -878,15 +875,26 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Démarrer le serveur après connexion à la base de données
-connectDB().then(async () => {
-  app.listen(PORT, config.host, () => {
-    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    console.log(`🌐 Host: ${config.host}`);
-    console.log(`📊 Environnement: ${config.nodeEnv}`);
-    console.log(`🔗 MongoDB: ${mongoose.connection.name}`);
-  });
-});
+// Démarrer le serveur
+const startServer = async () => {
+  try {
+    // Connecter à MongoDB
+    await connectDB();
+    
+    // Démarrer le serveur
+    app.listen(PORT, config.host, () => {
+      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+      console.log(`🌐 Host: ${config.host}`);
+      console.log(`📊 Environnement: ${config.nodeEnv}`);
+      console.log(`🔗 MongoDB: ${mongoose.connection.name}`);
+    });
+  } catch (error) {
+    console.error('❌ Erreur au démarrage:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // Gestion gracieuse de l'arrêt
 process.on('SIGTERM', () => {

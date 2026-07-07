@@ -7,7 +7,8 @@ const Comment = require('../models/Comment');
 const Message = require('../models/Message');
 const Settings = require('../models/Settings');
 const { resetToSeed } = require('../data/seed');
-const { signToken, requireAdmin } = require('../middleware/auth');
+const { signToken, requireAdmin, safeCompare } = require('../middleware/auth');
+const { loginLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -21,6 +22,22 @@ const avatarUpload = multer({
     cb(null, true);
   }
 });
+
+// Le Content-Type du multipart est déclaré par le client et donc falsifiable ;
+// on vérifie en plus les premiers octets réels du fichier avant d'accepter l'upload.
+function matchesImageMagicBytes(buffer, mimetype) {
+  if (!buffer || buffer.length < 12) return false;
+  if (mimetype === 'image/png') {
+    return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+  }
+  if (mimetype === 'image/jpeg') {
+    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (mimetype === 'image/webp') {
+    return buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+  }
+  return false;
+}
 
 function slugify(text) {
   return String(text)
@@ -41,9 +58,9 @@ async function uniqueId(baseText, Model) {
   return id;
 }
 
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, (req, res) => {
   const { password } = req.body || {};
-  if (!password || password !== process.env.ADMIN_PASSWORD) {
+  if (!password || !safeCompare(password, process.env.ADMIN_PASSWORD)) {
     return res.status(401).json({ ok: false, message: 'Mot de passe incorrect' });
   }
   res.json({ ok: true, token: signToken() });
@@ -87,6 +104,9 @@ router.post('/profile/avatar', (req, res, next) => {
   });
 }, async (req, res) => {
   if (!req.file) return res.status(400).json({ ok: false, message: 'Aucun fichier reçu' });
+  if (!matchesImageMagicBytes(req.file.buffer, req.file.mimetype)) {
+    return res.status(400).json({ ok: false, message: 'Le fichier ne semble pas être une image valide' });
+  }
 
   const avatarUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
   const profile = await Profile.findOneAndUpdate({}, { avatarUrl }, { upsert: true, returnDocument: 'after' });

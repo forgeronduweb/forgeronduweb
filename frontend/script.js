@@ -81,6 +81,11 @@ function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+function safeHref(url) {
+  const value = String(url ?? '').trim();
+  return /^https?:\/\//i.test(value) ? value : '';
+}
+
 function estimateReadingTime(content) {
   const words = String(content ?? '').trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
@@ -356,18 +361,20 @@ async function loadPortfolioData() {
       data.projects.forEach(project => {
         const card = document.createElement('div');
         card.className = 'project-card';
+        const demoHref = safeHref(project.demo);
+        const githubHref = safeHref(project.github);
         card.innerHTML = `
           <div class="project-header">
-            <div class="project-name">${project.name}</div>
-            <div class="project-status ${project.status === 'Live' ? 'live' : 'wip'}">${project.status}</div>
+            <div class="project-name">${escapeHtml(project.name)}</div>
+            <div class="project-status ${project.status === 'Live' ? 'live' : 'wip'}">${escapeHtml(project.status)}</div>
           </div>
-          <div class="project-desc">${project.description}</div>
+          <div class="project-desc">${escapeHtml(project.description)}</div>
           <div class="project-tech">
-            ${project.tech.map(tag => `<span class="tech-tag">${tag}</span>`).join('')}
+            ${(project.tech || []).map(tag => `<span class="tech-tag">${escapeHtml(tag)}</span>`).join('')}
           </div>
           <div class="project-links">
-            ${project.demo ? `<a class="project-link" href="${project.demo}">↗ Démo</a>` : ''}
-            ${project.github ? `<a class="project-link" href="${project.github}">⌥ GitHub</a>` : ''}
+            ${demoHref ? `<a class="project-link" href="${escapeHtml(demoHref)}" target="_blank" rel="noopener">↗ Démo</a>` : ''}
+            ${githubHref ? `<a class="project-link" href="${escapeHtml(githubHref)}" target="_blank" rel="noopener">⌥ GitHub</a>` : ''}
           </div>`;
         projectsGrid.appendChild(card);
       });

@@ -40,4 +40,12 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { signToken, verifyToken, requireAdmin };
+// Compare deux chaînes en temps constant en les hashant d'abord (évite les fuites
+// de longueur/contenu par timing attack) — utilisé pour vérifier le mot de passe admin.
+function safeCompare(a, b) {
+  const hashA = crypto.createHash('sha256').update(String(a ?? '')).digest();
+  const hashB = crypto.createHash('sha256').update(String(b ?? '')).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+module.exports = { signToken, verifyToken, requireAdmin, safeCompare };

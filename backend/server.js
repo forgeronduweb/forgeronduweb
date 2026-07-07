@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config();
 
@@ -11,6 +12,13 @@ const adminRouter = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Nécessaire pour que express-rate-limit voie la vraie IP du visiteur derrière le proxy de Render.
+app.set('trust proxy', 1);
+
+// CSP désactivée : le HTML utilise des attributs onclick="" inline partout (admin et frontend),
+// une CSP par défaut casserait toute l'interactivité du site. Les autres protections de helmet
+// (X-Frame-Options, X-Content-Type-Options, etc.) restent actives.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 

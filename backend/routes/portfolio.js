@@ -5,6 +5,7 @@ const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
 const Settings = require('../models/Settings');
+const { publicWriteLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.get('/portfolio', async (_req, res) => {
   res.json({ profile, projects, articles, settings });
 });
 
-router.post('/articles/:id/like', async (req, res) => {
+router.post('/articles/:id/like', publicWriteLimiter, async (req, res) => {
   const article = await Article.findOneAndUpdate(
     { id: req.params.id },
     { $inc: { likes: 1 } },
@@ -33,7 +34,7 @@ router.post('/articles/:id/like', async (req, res) => {
   res.json({ ok: true, likes: article.likes });
 });
 
-router.delete('/articles/:id/like', async (req, res) => {
+router.delete('/articles/:id/like', publicWriteLimiter, async (req, res) => {
   const article = await Article.findOneAndUpdate(
     { id: req.params.id },
     { $inc: { likes: -1 } },
@@ -47,7 +48,7 @@ router.delete('/articles/:id/like', async (req, res) => {
   res.json({ ok: true, likes: article.likes });
 });
 
-router.post('/articles/:id/share', async (req, res) => {
+router.post('/articles/:id/share', publicWriteLimiter, async (req, res) => {
   const article = await Article.findOneAndUpdate(
     { id: req.params.id },
     { $inc: { shares: 1 } },
@@ -62,7 +63,7 @@ router.get('/articles/:id/comments', async (req, res) => {
   res.json({ ok: true, comments });
 });
 
-router.post('/articles/:id/comments', async (req, res) => {
+router.post('/articles/:id/comments', publicWriteLimiter, async (req, res) => {
   const { name, message } = req.body || {};
   if (!name || !message) {
     return res.status(400).json({ ok: false, message: 'Nom et message sont requis' });
@@ -75,7 +76,7 @@ router.post('/articles/:id/comments', async (req, res) => {
   res.status(201).json({ ok: true, message: 'Commentaire envoyé, en attente de validation' });
 });
 
-router.post('/contact', async (req, res) => {
+router.post('/contact', publicWriteLimiter, async (req, res) => {
   const { name, email, subject, message } = req.body || {};
   if (!name || !email || !subject || !message) {
     return res.status(400).json({ ok: false, message: 'Tous les champs sont requis' });

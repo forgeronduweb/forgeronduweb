@@ -276,12 +276,48 @@ async function loadPortfolioData() {
     if (!response.ok) throw new Error('Erreur API');
     const data = await response.json();
 
+    if (data.settings) {
+      if (data.settings.siteTitle) document.title = data.settings.siteTitle;
+      if (data.settings.seoDescription) {
+        let meta = document.querySelector('meta[name="description"]');
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('name', 'description');
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', data.settings.seoDescription);
+      }
+
+      const visibility = data.settings.sectionVisibility || {};
+      Object.entries(visibility).forEach(([id, visible]) => {
+        if (visible === false) {
+          const section = document.getElementById(id);
+          if (section) section.style.display = 'none';
+          document.querySelectorAll(`[data-section="${id}"]`).forEach(link => { link.style.display = 'none'; });
+        }
+      });
+    }
+
     const name = document.querySelector('[data-section="about"]');
     if (name) {
       document.querySelector('.about-name').textContent = data.profile.name;
       document.querySelector('.about-role').textContent = `${data.profile.role} · ${data.profile.location}`;
       document.querySelector('.about-bio p').textContent = data.profile.bio;
     }
+
+    const avatarImg = document.getElementById('about-avatar-img');
+    if (avatarImg && data.profile.avatarUrl) {
+      avatarImg.src = data.profile.avatarUrl;
+    }
+
+    const statProjects = document.getElementById('stat-projects');
+    if (statProjects) statProjects.textContent = data.projects.length;
+
+    const statExperience = document.getElementById('stat-experience');
+    if (statExperience) statExperience.textContent = `${data.profile.yearsOfExperience || 0}+`;
+
+    const statStack = document.getElementById('stat-stack');
+    if (statStack) statStack.textContent = (data.profile.stack || []).length;
 
     const contactSub = document.getElementById('contact-sub');
     if (contactSub && data.profile.availabilityMessage) {
@@ -322,10 +358,9 @@ async function loadPortfolioData() {
         card.className = 'project-card';
         card.innerHTML = `
           <div class="project-header">
-            <div class="project-icon"></div>
+            <div class="project-name">${project.name}</div>
             <div class="project-status ${project.status === 'Live' ? 'live' : 'wip'}">${project.status}</div>
           </div>
-          <div class="project-name">${project.name}</div>
           <div class="project-desc">${project.description}</div>
           <div class="project-tech">
             ${project.tech.map(tag => `<span class="tech-tag">${tag}</span>`).join('')}

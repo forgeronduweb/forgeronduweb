@@ -507,13 +507,6 @@ tbody tr:hover td { background: rgba(255,255,255,.015); }
   border: 2px solid var(--border2);
   position: relative;
 }
-.avatar-overlay {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(0,0,0,.55);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity .15s; cursor: pointer;
-}
-.avatar-preview:hover .avatar-overlay { opacity: 1; }
 .avatar-info { flex: 1; }
 .avatar-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
 .avatar-info p  { font-size: 11px; color: var(--muted); margin-bottom: 12px; }

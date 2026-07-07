@@ -1,11 +1,14 @@
 const Profile = require('../models/Profile');
 const Project = require('../models/Project');
 const Article = require('../models/Article');
+const Comment = require('../models/Comment');
+const Message = require('../models/Message');
 
 const seedProfile = {
   name: 'Philomé Evrard BAHO',
   role: 'Développeur Fullstack',
   location: 'Bingerville, Abidjan · Côte d\'Ivoire',
+  yearsOfExperience: 3,
   email: 'forgeronduweb@gmail.com',
   website: '',
   github: 'https://github.com/forgeronduweb',
@@ -80,4 +83,15 @@ async function seedIfEmpty() {
   if (articleCount === 0) await Article.insertMany(seedArticles);
 }
 
-module.exports = { seedIfEmpty };
+async function resetToSeed() {
+  await Promise.all([
+    Project.deleteMany({}),
+    Article.deleteMany({}),
+    Comment.deleteMany({}),
+    Message.deleteMany({})
+  ]);
+  await Project.insertMany(seedProjects);
+  await Article.insertMany(seedArticles);
+}
+
+module.exports = { seedIfEmpty, resetToSeed };

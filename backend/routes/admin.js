@@ -1,12 +1,26 @@
 const express = require('express');
+const multer = require('multer');
 const Profile = require('../models/Profile');
 const Project = require('../models/Project');
 const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
+const Settings = require('../models/Settings');
+const { resetToSeed } = require('../data/seed');
 const { signToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      return cb(new Error('Format non supporté (JPG, PNG ou WebP uniquement)'));
+    }
+    cb(null, true);
+  }
+});
 
 function slugify(text) {
   return String(text)
@@ -38,7 +52,7 @@ router.post('/login', (req, res) => {
 router.use(requireAdmin);
 
 router.put('/profile', async (req, res) => {
-  const { name, role, location, email, website, github, linkedin, instagram, status, availabilityMessage, bio, stack } = req.body || {};
+  const { name, role, location, yearsOfExperience, email, avatarUrl, website, github, linkedin, instagram, status, availabilityMessage, bio, stack } = req.body || {};
   if (!name || !role || !email) {
     return res.status(400).json({ ok: false, message: 'Nom, rôle et email sont requis' });
   }
@@ -49,7 +63,9 @@ router.put('/profile', async (req, res) => {
       name,
       role,
       location: location || '',
+      yearsOfExperience: Number.isFinite(Number(yearsOfExperience)) ? Number(yearsOfExperience) : 0,
       email,
+      avatarUrl: avatarUrl || '',
       website: website || '',
       github: github || '',
       linkedin: linkedin || '',
@@ -62,6 +78,19 @@ router.put('/profile', async (req, res) => {
     { upsert: true, returnDocument: 'after' }
   );
   res.json({ ok: true, profile });
+});
+
+router.post('/profile/avatar', (req, res, next) => {
+  avatarUpload.single('avatar')(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, message: err.message });
+    next();
+  });
+}, async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, message: 'Aucun fichier reçu' });
+
+  const avatarUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+  const profile = await Profile.findOneAndUpdate({}, { avatarUrl }, { upsert: true, returnDocument: 'after' });
+  res.json({ ok: true, avatarUrl, profile });
 });
 
 router.post('/projects', async (req, res) => {
@@ -196,6 +225,38 @@ router.delete('/messages/:id', async (req, res) => {
   const message = await Message.findByIdAndDelete(req.params.id);
   if (!message) return res.status(404).json({ ok: false, message: 'Message introuvable' });
   res.json({ ok: true });
+});
+
+router.get('/settings', async (_req, res) => {
+  const settings = await Settings.findOneAndUpdate({}, {}, { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true });
+  res.json({ ok: true, settings });
+});
+
+router.put('/settings', async (req, res) => {
+  const { siteTitle, seoDescription, portfolioUrl, sectionVisibility } = req.body || {};
+
+  const settings = await Settings.findOneAndUpdate(
+    {},
+    {
+      siteTitle: siteTitle || 'Evrard BAHO — Dev Portfolio',
+      seoDescription: seoDescription || '',
+      portfolioUrl: portfolioUrl || '',
+      sectionVisibility: {
+        home: sectionVisibility?.home !== false,
+        about: sectionVisibility?.about !== false,
+        projects: sectionVisibility?.projects !== false,
+        blog: sectionVisibility?.blog !== false,
+        contact: sectionVisibility?.contact !== false
+      }
+    },
+    { upsert: true, returnDocument: 'after' }
+  );
+  res.json({ ok: true, settings });
+});
+
+router.post('/reset', async (_req, res) => {
+  await resetToSeed();
+  res.json({ ok: true, message: 'Portfolio réinitialisé' });
 });
 
 module.exports = router;

@@ -4,6 +4,7 @@ const Project = require('../models/Project');
 const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
+const Settings = require('../models/Settings');
 
 const router = express.Router();
 
@@ -12,13 +13,14 @@ router.get('/health', (_req, res) => {
 });
 
 router.get('/portfolio', async (_req, res) => {
-  const [profile, projects, articles] = await Promise.all([
+  const [profile, projects, articles, settings] = await Promise.all([
     Profile.findOne(),
     Project.find(),
-    Article.find()
+    Article.find(),
+    Settings.findOne()
   ]);
 
-  res.json({ profile, projects, articles });
+  res.json({ profile, projects, articles, settings });
 });
 
 router.post('/articles/:id/like', async (req, res) => {

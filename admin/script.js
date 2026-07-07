@@ -8,6 +8,8 @@ const APPROVE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 let portfolio = { profile: {}, projects: [], articles: [] };
 let comments = [];
 let messages = [];
+let settings = {};
+let avatarUrlDirty = false;
 let editingProjectId = null;
 let editingArticleId = null;
 let deleteContext = null;
@@ -238,6 +240,10 @@ async function init() {
     const messagesBody = await messagesRes.json();
     messages = messagesBody.messages || [];
 
+    const settingsRes = await apiFetch('/admin/settings');
+    const settingsBody = await settingsRes.json();
+    settings = settingsBody.settings || {};
+
     lastSyncAt = new Date();
     updateLastSync();
     renderDashboardStats();
@@ -246,6 +252,7 @@ async function init() {
     renderProfileForm();
     renderComments();
     renderMessages();
+    renderSettingsForm();
     return true;
   } catch (error) {
     console.error('Erreur de chargement de l\'admin', error);
@@ -631,6 +638,7 @@ function renderProfileForm() {
   document.getElementById('profile-lastname').value = rest.join(' ');
   document.getElementById('profile-role').value = p.role || '';
   document.getElementById('profile-location').value = p.location || '';
+  document.getElementById('profile-years-experience').value = p.yearsOfExperience || 0;
   document.getElementById('profile-bio').value = p.bio || '';
   document.getElementById('profile-website').value = p.website || '';
   document.getElementById('profile-github').value = p.github || '';
@@ -639,16 +647,90 @@ function renderProfileForm() {
   document.getElementById('profile-email').value = p.email || '';
   document.getElementById('profile-status').value = p.status || 'Ouvert aux missions';
   document.getElementById('profile-availability-message').value = p.availabilityMessage || '';
+
+  const avatarUrlInput = document.getElementById('profile-avatar-url');
+  if ((p.avatarUrl || '').startsWith('data:')) {
+    avatarUrlInput.value = '';
+    avatarUrlInput.placeholder = 'Photo uploadée — colle une URL pour la remplacer';
+  } else {
+    avatarUrlInput.value = p.avatarUrl || '';
+    avatarUrlInput.placeholder = 'https://...';
+  }
+  avatarUrlDirty = false;
+  setAvatarPreview(p.avatarUrl || '');
   setTags(p.stack);
+}
+
+function setAvatarPreview(url) {
+  const img = document.getElementById('avatar-preview-img');
+  const initials = document.getElementById('avatar-preview-initials');
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    initials.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    initials.style.display = '';
+  }
+}
+
+function updateAvatarPreview() {
+  avatarUrlDirty = true;
+  setAvatarPreview(document.getElementById('profile-avatar-url').value.trim());
+}
+
+async function clearAvatarUrl() {
+  document.getElementById('profile-avatar-url').value = '';
+  document.getElementById('profile-avatar-url').placeholder = 'https://...';
+  avatarUrlDirty = true;
+  setAvatarPreview('');
+  await saveProfile();
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  try {
+    const token = getToken();
+    const response = await fetch(`${API_BASE}/admin/profile/avatar`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+    if (response.status === 401) {
+      clearToken();
+      showLoginScreen();
+      return;
+    }
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    portfolio.profile = body.profile;
+    renderProfileForm();
+    showToast('Photo mise à jour', 'success');
+  } catch (error) {
+    showToast(error.message || 'Échec de l\'upload', 'error');
+  } finally {
+    event.target.value = '';
+  }
 }
 
 async function saveProfile() {
   const firstname = document.getElementById('profile-firstname').value.trim();
   const lastname = document.getElementById('profile-lastname').value.trim();
+  const avatarUrl = avatarUrlDirty
+    ? document.getElementById('profile-avatar-url').value.trim()
+    : (portfolio.profile.avatarUrl || '');
   const payload = {
     name: [firstname, lastname].filter(Boolean).join(' '),
     role: document.getElementById('profile-role').value.trim(),
     location: document.getElementById('profile-location').value.trim(),
+    yearsOfExperience: Number(document.getElementById('profile-years-experience').value) || 0,
+    avatarUrl,
     bio: document.getElementById('profile-bio').value.trim(),
     website: document.getElementById('profile-website').value.trim(),
     github: document.getElementById('profile-github').value.trim(),
@@ -669,6 +751,58 @@ async function saveProfile() {
     showToast('Profil sauvegardé', 'success');
   } catch (error) {
     showToast(error.message || 'Échec de la sauvegarde', 'error');
+  }
+}
+
+// ═══════════════ PARAMÈTRES ═══════════════
+
+function renderSettingsForm() {
+  const s = settings;
+  const visibility = s.sectionVisibility || {};
+  document.getElementById('settings-site-title').value = s.siteTitle || '';
+  document.getElementById('settings-seo-description').value = s.seoDescription || '';
+  document.getElementById('settings-portfolio-url').value = s.portfolioUrl || '';
+  ['home', 'about', 'projects', 'blog', 'contact'].forEach(id => {
+    document.getElementById(`visibility-${id}`).checked = visibility[id] !== false;
+  });
+}
+
+async function saveSettings() {
+  const payload = {
+    siteTitle: document.getElementById('settings-site-title').value.trim(),
+    seoDescription: document.getElementById('settings-seo-description').value.trim(),
+    portfolioUrl: document.getElementById('settings-portfolio-url').value.trim(),
+    sectionVisibility: {
+      home: document.getElementById('visibility-home').checked,
+      about: document.getElementById('visibility-about').checked,
+      projects: document.getElementById('visibility-projects').checked,
+      blog: document.getElementById('visibility-blog').checked,
+      contact: document.getElementById('visibility-contact').checked
+    }
+  };
+
+  try {
+    const response = await apiFetch('/admin/settings', { method: 'PUT', body: JSON.stringify(payload) });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    settings = body.settings;
+    showToast('Paramètres sauvegardés', 'success');
+  } catch (error) {
+    showToast(error.message || 'Échec de la sauvegarde', 'error');
+  }
+}
+
+async function resetPortfolio() {
+  try {
+    const response = await apiFetch('/admin/reset', { method: 'POST' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    await init();
+    showToast('Portfolio réinitialisé', 'success');
+  } catch (error) {
+    showToast(error.message || 'Échec de la réinitialisation', 'error');
   }
 }
 
@@ -849,6 +983,14 @@ async function performDelete() {
   }
 
   const { type, id } = deleteContext;
+
+  if (type === 'reset') {
+    closeModal('delete');
+    deleteContext = null;
+    await resetPortfolio();
+    return;
+  }
+
   try {
     const response = await apiFetch(`/admin/${type}/${id}`, { method: 'DELETE' });
     const body = await response.json();

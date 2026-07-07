@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Evrard BAHO Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="modal-overlay open" id="login-screen">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><div class="modal-title">Connexion admin</div></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:8px">
+        <label class="form-label">Mot de passe</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <p id="login-error" style="font-size:12px;color:var(--red);display:none">Mot de passe incorrect</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="width:100%" onclick="login()">Se connecter</button>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="shell">
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">EB</div>
+    <div class="sb-logo-info">
+      <div class="sb-logo-title">Portfolio Admin</div>
+      <div class="sb-logo-sub">v1.0.0</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section-label">Principal</div>
+    <a class="sb-link active" data-page="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="sb-link" data-page="articles">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      Articles
+      <span class="sb-badge" id="badge-articles">0</span>
+    </a>
+    <a class="sb-link" data-page="projets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 2,7 12,12 22,7"/><polyline points="2,17 12,22 22,17"/><polyline points="2,12 12,17 22,12"/></svg>
+      Projets
+      <span class="sb-badge" id="badge-projects">0</span>
+    </a>
+    <a class="sb-link" data-page="commentaires">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      Commentaires
+      <span class="sb-badge" id="badge-comments">0</span>
+    </a>
+    <a class="sb-link" data-page="messages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Messages
+      <span class="sb-badge" id="badge-messages">0</span>
+    </a>
+    <div class="sb-section-label" style="margin-top:8px">Contenu</div>
+    <a class="sb-link" data-page="medias">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+      Médias
+    </a>
+    <a class="sb-link" data-page="profil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </a>
+    <div class="sb-section-label" style="margin-top:8px">Système</div>
+    <a class="sb-link" data-page="parametres">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Paramètres
+    </a>
+    <a class="sb-link" href="../portfolio.html" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Voir le site
+    </a>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="sb-avatar">EB</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name">Evrard BAHO</div>
+          <div class="sb-user-role">Administrateur</div>
+        </div>
+      </div>
+      <div class="icon-btn" title="Déconnexion" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════ TOPBAR ═══════════════ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="burger" id="burgerBtn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <span>admin</span>
+    <span>/</span>
+    <strong id="breadcrumb">dashboard</strong>
+  </div>
+  <div class="topbar-right">
+    <div class="notif-btn" title="Notifications">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <div class="notif-dot"></div>
+    </div>
+    <button class="btn btn-ghost btn-sync" onclick="syncNow()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      Sync
+    </button>
+    <button class="btn btn-primary" onclick="showModal('new-choice')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouveau
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main">
+
+<!-- ────────── DASHBOARD ────────── -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-desc">Vue d'ensemble de ton portfolio</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="last-sync-label" style="font-size:11px;font-family:var(--mono);color:var(--muted)">Dernière sync : —</span>
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0"></div>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="grid-4" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div>
+        <div class="stat-label">Articles</div>
+        <div class="stat-val" id="stat-articles-count">0</div>
+        <div class="stat-sub" id="stat-articles-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 2,7 12,12 22,7"/><polyline points="2,17 12,22 22,17"/></svg></div>
+        <div class="stat-label">Projets</div>
+        <div class="stat-val" id="stat-projects-count">0</div>
+        <div class="stat-sub" id="stat-projects-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg></div>
+        <div class="stat-label">Médias</div>
+        <div class="stat-val">12</div>
+        <div class="stat-sub">3.4 Mo utilisés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div class="stat-label">Visiteurs</div>
+        <div class="stat-val">—</div>
+        <div class="stat-sub">Analytics non connecté</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="align-items:start">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Activité récente</div>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">7 derniers jours</span>
+        </div>
+        <div class="card-body" style="padding-top:8px;padding-bottom:8px" id="activity-list"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">État du site</div>
+            <span class="badge badge-green">En ligne</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Sections complètes</span><span style="font-family:var(--mono)" id="sections-fraction">0/5</span></div>
+                <div class="progress"><div class="progress-fill green" id="sections-fill" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Articles publiés</span><span style="font-family:var(--mono)" id="articles-fraction">0/0</span></div>
+                <div class="progress"><div class="progress-fill blue" id="articles-fill" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Projets documentés</span><span style="font-family:var(--mono)" id="projects-fraction">0/0</span></div>
+                <div class="progress"><div class="progress-fill green" id="projects-fill" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Actions rapides</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:10px" onclick="goPage('articles');showModal('new-article')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nouvel article
+            </button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:10px" onclick="goPage('projets');showModal('new-projet')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nouveau projet
+            </button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:10px" onclick="goPage('profil')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Modifier le profil
+            </button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:10px" onclick="goPage('medias')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+              Gérer les médias
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────── ARTICLES ────────── -->
+<div class="page" id="page-articles">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Articles</div>
+      <div class="page-desc">Gère tes publications et brouillons</div>
+    </div>
+    <button class="btn btn-primary" onclick="showModal('new-article')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouvel article
+    </button>
+  </div>
+  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+    <button class="btn btn-ghost active-filter" data-filter="all" onclick="setArticleFilter('all',this)">Tous (<span id="filter-count-all">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="published" onclick="setArticleFilter('published',this)">Publiés (<span id="filter-count-published">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="draft" onclick="setArticleFilter('draft',this)">Brouillons (<span id="filter-count-draft">0</span>)</button>
+    <div style="margin-left:auto">
+      <input class="form-input" id="article-search" placeholder="Rechercher..." style="width:200px;padding:5px 10px" oninput="renderArticles()">
+    </div>
+  </div>
+  <div class="page-body" style="display:flex;flex-direction:column;gap:12px" id="articles-list"></div>
+</div>
+
+<!-- ────────── PROJETS ────────── -->
+<div class="page" id="page-projets">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Projets</div>
+      <div class="page-desc">Gère tes réalisations et leur statut</div>
+    </div>
+    <button class="btn btn-primary" onclick="showModal('new-projet')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter un projet
+    </button>
+  </div>
+  <div class="page-body" style="display:flex;flex-direction:column;gap:10px" id="projets-list"></div>
+</div>
+
+<!-- ────────── COMMENTAIRES ────────── -->
+<div class="page" id="page-commentaires">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Commentaires</div>
+      <div class="page-desc">Modère les commentaires postés sur tes articles</div>
+    </div>
+  </div>
+  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+    <button class="btn btn-ghost active-filter" data-filter="all" onclick="setCommentFilter('all',this)">Tous (<span id="comment-count-all">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="pending" onclick="setCommentFilter('pending',this)">En attente (<span id="comment-count-pending">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="approved" onclick="setCommentFilter('approved',this)">Approuvés (<span id="comment-count-approved">0</span>)</button>
+  </div>
+  <div class="page-body" style="display:flex;flex-direction:column;gap:12px" id="comments-list"></div>
+</div>
+
+<!-- ────────── MESSAGES ────────── -->
+<div class="page" id="page-messages">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Messages</div>
+      <div class="page-desc">Messages reçus via le formulaire de contact</div>
+    </div>
+  </div>
+  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+    <button class="btn btn-ghost active-filter" data-filter="all" onclick="setMessageFilter('all',this)">Tous (<span id="message-count-all">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="unread" onclick="setMessageFilter('unread',this)">Non lus (<span id="message-count-unread">0</span>)</button>
+  </div>
+  <div class="page-body" style="display:flex;flex-direction:column;gap:12px" id="messages-list"></div>
+</div>
+
+<!-- ────────── MÉDIAS ────────── -->
+<div class="page" id="page-medias">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Médias</div>
+      <div class="page-desc">Images et fichiers de ton portfolio</div>
+    </div>
+    <button class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Importer
+    </button>
+  </div>
+  <div class="page-body">
+    <div class="upload-zone" style="margin-bottom:24px" onclick="showToast('Upload — à connecter au backend','info')">
+      <div class="upload-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,16 12,12 8,16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+      <div class="upload-title">Glisse tes fichiers ici</div>
+      <div class="upload-sub">PNG, JPG, SVG, WebP — max 5 Mo par fichier</div>
+    </div>
+    <div class="media-grid">
+      <div class="media-item"><div class="media-thumb">🖼️</div><div class="media-name">kondui-screen.png</div></div>
+      <div class="media-item"><div class="media-thumb">🖼️</div><div class="media-name">dashboard-sav.png</div></div>
+      <div class="media-item"><div class="media-thumb">🖼️</div><div class="media-name">profile-photo.jpg</div></div>
+      <div class="media-item"><div class="media-thumb">🖼️</div><div class="media-name">portfolio-og.png</div></div>
+      <div class="media-item"><div class="media-thumb">📄</div><div class="media-name">cv-evrard.pdf</div></div>
+      <div class="media-item"><div class="media-thumb">🖼️</div><div class="media-name">hero-bg.svg</div></div>
+      <div class="media-add" onclick="showToast('Upload disponible avec le backend','info')">+</div>
+    </div>
+    <hr class="divider">
+    <div style="font-size:12px;color:var(--muted);font-family:var(--mono)">7 fichiers · 3.4 Mo utilisés</div>
+  </div>
+</div>
+
+<!-- ────────── PROFIL ────────── -->
+<div class="page" id="page-profil">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Profil</div>
+      <div class="page-desc">Informations affichées sur ton portfolio</div>
+    </div>
+    <button class="btn btn-primary" onclick="saveProfile()">Sauvegarder</button>
+  </div>
+  <div class="page-body">
+    <div class="grid-2" style="align-items:start;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Photo de profil</div></div>
+          <div class="card-body">
+            <div class="avatar-edit">
+              <div class="avatar-preview">
+                EB
+                <div class="avatar-overlay" onclick="showToast('Upload photo — à connecter','info')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+              </div>
+              <div class="avatar-info">
+                <h4>Changer la photo</h4>
+                <p>JPG, PNG ou WebP · Max 2 Mo<br>Recommandé : 400×400px</p>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost" style="font-size:12px" onclick="showToast('Choisir un fichier','info')">Choisir un fichier</button>
+                  <button class="btn btn-danger" style="font-size:12px" onclick="showToast('Photo supprimée','info')">Supprimer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Identité</div></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Prénom<span>*</span></label><input class="form-input" type="text" id="profile-firstname"></div>
+              <div class="form-group"><label class="form-label">Nom<span>*</span></label><input class="form-input" type="text" id="profile-lastname"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Titre / Rôle<span>*</span></label><input class="form-input" type="text" id="profile-role"></div>
+            <div class="form-group"><label class="form-label">Localisation</label><input class="form-input" type="text" id="profile-location"></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Biographie</label><textarea class="form-input" rows="4" id="profile-bio"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Liens & Réseaux</div></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Site web</label><input class="form-input mono" type="url" id="profile-website"></div>
+            <div class="form-group"><label class="form-label">GitHub</label><input class="form-input mono" type="text" id="profile-github"></div>
+            <div class="form-group"><label class="form-label">LinkedIn</label><input class="form-input mono" type="text" id="profile-linkedin"></div>
+            <div class="form-group"><label class="form-label">Instagram</label><input class="form-input mono" type="text" id="profile-instagram"></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Email de contact</label><input class="form-input mono" type="email" id="profile-email"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Statut de disponibilité</div></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Statut affiché</label>
+              <select class="form-input" id="profile-status">
+                <option value="Ouvert aux missions">● Ouvert aux missions</option>
+                <option value="Temporairement indisponible">⏸ Temporairement indisponible</option>
+                <option value="Non disponible">✗ Non disponible</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Message</label><input class="form-input" type="text" id="profile-availability-message"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Stack & Compétences</div></div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Technologies (Entrée pour ajouter)</label>
+              <div class="tags-container" id="tags-container" onclick="document.getElementById('tag-input').focus()">
+                <input class="tags-input" id="tag-input" placeholder="Ajouter..." onkeydown="handleTagInput(event)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────── PARAMÈTRES ────────── -->
+<div class="page" id="page-parametres">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Paramètres</div>
+      <div class="page-desc">Configuration générale du portfolio</div>
+    </div>
+    <button class="btn btn-primary" onclick="showToast('Paramètres sauvegardés','success')">Sauvegarder</button>
+  </div>
+  <div class="page-body">
+    <div class="grid-2" style="align-items:start;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Général</div></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Titre du site</label><input class="form-input" type="text" value="Evrard BAHO — Dev Portfolio"></div>
+            <div class="form-group"><label class="form-label">Description (SEO)</label><textarea class="form-input" rows="3">Développeur fullstack basé à Abidjan. React, Next.js, Node.js.</textarea></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">URL du portfolio</label><input class="form-input mono" type="text" value="https://evrard.dev"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Apparence</div></div>
+          <div class="card-body">
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Mode sombre</div><div class="toggle-desc">Thème dark par défaut</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Animation terminal</div><div class="toggle-desc">Terminal animé sur l'accueil</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Grille de fond</div><div class="toggle-desc">Grille subtile en arrière-plan</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Visibilité des sections</div></div>
+          <div class="card-body">
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Accueil</div><div class="toggle-desc">Hero, stats, terminal</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">À propos</div><div class="toggle-desc">Biographie et compétences</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Projets</div><div class="toggle-desc">Grille des réalisations</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Articles</div><div class="toggle-desc">Liste des publications</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Contact</div><div class="toggle-desc">Formulaire et réseaux</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Zone de danger</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-danger" style="justify-content:flex-start" onclick="confirmDelete('tout le contenu du portfolio', null, null)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+              Réinitialiser le portfolio
+            </button>
+            <p style="font-size:11px;color:var(--muted)">Cette action est irréversible.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<div class="modal-overlay" id="modal-new-article">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nouvel article</div><div class="modal-close" onclick="closeModal('new-article')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Titre<span>*</span></label><input class="form-input" type="text" id="new-article-title" placeholder="Titre de l'article..."></div>
+      <div class="form-group"><label class="form-label">Catégorie</label><select class="form-input" id="new-article-category"><option>IA & Dev</option><option>Frontend</option><option>Backend</option><option>DevOps</option><option>Produit</option></select></div>
+      <div class="form-group"><label class="form-label">Extrait</label><textarea class="form-input" rows="2" id="new-article-excerpt" placeholder="Court résumé..."></textarea></div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Contenu</label>
+        <div class="editor-toolbar">
+          <div class="toolbar-btn" onclick="applyFormat('new-article-content','bold')"><b>B</b></div><div class="toolbar-btn" onclick="applyFormat('new-article-content','italic')"><i>I</i></div>
+          <div class="toolbar-sep"></div>
+          <div class="toolbar-btn" onclick="applyFormat('new-article-content','h1')">H1</div><div class="toolbar-btn" onclick="applyFormat('new-article-content','h2')">H2</div>
+          <div class="toolbar-sep"></div>
+          <div class="toolbar-btn" onclick="applyFormat('new-article-content','code')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg></div>
+        </div>
+        <textarea class="form-input editor-area mono" rows="8" id="new-article-content" placeholder="Écris ton article ici... (Markdown supporté : **gras**, *italique*, # titre, ## sous-titre, `code`)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-article')">Annuler</button>
+      <button class="btn btn-ghost" onclick="submitNewArticle(false)">Sauver brouillon</button>
+      <button class="btn btn-primary" onclick="submitNewArticle(true)">Publier</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-article">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Éditer l'article</div><div class="modal-close" onclick="closeModal('edit-article')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Titre<span>*</span></label><input class="form-input" type="text" id="edit-article-title"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Catégorie</label><select class="form-input" id="edit-article-category"><option>IA & Dev</option><option>Frontend</option><option>Backend</option><option>DevOps</option><option>Produit</option></select></div>
+        <div class="form-group"><label class="form-label">Statut</label><select class="form-input" id="edit-article-status"><option value="draft">Brouillon</option><option value="published">Publié</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Extrait</label><textarea class="form-input" rows="2" id="edit-article-excerpt"></textarea></div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Contenu</label>
+        <div class="editor-toolbar">
+          <div class="toolbar-btn" onclick="applyFormat('edit-article-content','bold')"><b>B</b></div><div class="toolbar-btn" onclick="applyFormat('edit-article-content','italic')"><i>I</i></div>
+          <div class="toolbar-sep"></div>
+          <div class="toolbar-btn" onclick="applyFormat('edit-article-content','h1')">H1</div><div class="toolbar-btn" onclick="applyFormat('edit-article-content','h2')">H2</div>
+          <div class="toolbar-sep"></div>
+          <div class="toolbar-btn" onclick="applyFormat('edit-article-content','code')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg></div>
+        </div>
+        <textarea class="form-input editor-area mono" rows="7" id="edit-article-content"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('edit-article')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitEditArticle()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-projet">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Ajouter un projet</div><div class="modal-close" onclick="closeModal('new-projet')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nom<span>*</span></label><input class="form-input" type="text" id="new-projet-name" placeholder="Mon Projet..."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" rows="3" id="new-projet-description" placeholder="Décris le projet..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Statut</label><select class="form-input" id="new-projet-status"><option>En cours</option><option>Live</option><option>Archivé</option></select></div>
+        <div class="form-group"><label class="form-label">Lien démo</label><input class="form-input mono" type="url" id="new-projet-demo" placeholder="https://..."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Lien GitHub</label><input class="form-input mono" type="url" id="new-projet-github" placeholder="https://github.com/..."></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Technologies</label><input class="form-input" type="text" id="new-projet-tech" placeholder="React, Next.js, Node.js..."><div class="form-hint">Sépare les technos par une virgule</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-projet')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitNewProject()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-projet">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Modifier le projet</div><div class="modal-close" onclick="closeModal('edit-projet')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nom<span>*</span></label><input class="form-input" type="text" id="edit-projet-name"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" rows="3" id="edit-projet-description"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Statut</label><select class="form-input" id="edit-projet-status"><option>En cours</option><option>Live</option><option>Archivé</option></select></div>
+        <div class="form-group"><label class="form-label">Lien démo</label><input class="form-input mono" type="url" id="edit-projet-demo"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Lien GitHub</label><input class="form-input mono" type="url" id="edit-projet-github"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Technologies</label><input class="form-input" type="text" id="edit-projet-tech"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('edit-projet')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitEditProject()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-choice">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title">Que veux-tu créer ?</div><div class="modal-close" onclick="closeModal('new-choice')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+      <div class="choice-card" onclick="closeModal('new-choice');goPage('articles');showModal('new-article')">
+        <div class="choice-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
+        <div>
+          <div class="choice-card-title">Un article</div>
+          <div class="choice-card-desc">Rédiger un nouveau billet de blog</div>
+        </div>
+      </div>
+      <div class="choice-card" onclick="closeModal('new-choice');goPage('projets');showModal('new-projet')">
+        <div class="choice-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 2,7 12,12 22,7"/><polyline points="2,17 12,22 22,17"/><polyline points="2,12 12,17 22,12"/></svg></div>
+        <div>
+          <div class="choice-card-title">Un projet</div>
+          <div class="choice-card-desc">Ajouter une réalisation au portfolio</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title">Confirmer la suppression</div><div class="modal-close" onclick="closeModal('delete')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">
+        Tu es sur le point de supprimer <strong id="delete-target" style="color:var(--text)"></strong>.<br>
+        Cette action est <strong style="color:var(--red)">irréversible</strong>.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delete')">Annuler</button>
+      <button class="btn btn-danger" onclick="performDelete()">Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

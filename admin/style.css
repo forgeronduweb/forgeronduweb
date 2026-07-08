@@ -261,6 +261,7 @@ ul { list-style: none; }
   padding-top: var(--topbar-h);
   min-height: 100vh;
   flex: 1;
+  min-width: 0;
 }
 
 /* Page */
@@ -582,6 +583,7 @@ tbody tr:hover td { background: rgba(255,255,255,.015); }
   transition: border-color .14s;
   position: relative;
   overflow: hidden;
+  min-width: 0;
 }
 .proj-card::before {
   content: '';

@@ -352,7 +352,7 @@ async function submitComment(event, id) {
   return false;
 }
 
-async function loadPortfolioData() {
+async function loadPortfolioData({ silent = false } = {}) {
   const statusEl = document.getElementById('api-status');
   try {
     const response = await fetch(`${API_BASE}/portfolio`, { headers: { Accept: 'application/json' } });
@@ -569,7 +569,7 @@ async function loadPortfolioData() {
       openArticleFromHash();
     }
   } catch (error) {
-    if (statusEl) {
+    if (!silent && statusEl) {
       statusEl.textContent = 'Impossible de joindre le backend';
       statusEl.style.color = '#ef4444';
     }
@@ -628,3 +628,17 @@ async function handleSubmit(btn) {
 }
 
 window.addEventListener('DOMContentLoaded', loadPortfolioData);
+
+// Repère si le visiteur est en train de saisir un formulaire (contact, commentaire) ou de lire
+// un article/projet, pour ne jamais lui couper sa lecture ou effacer sa saisie en arrière-plan.
+function isVisitorBusy() {
+  const active = document.activeElement;
+  const editingField = active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
+  const reading = document.body.classList.contains('viewing-article') || document.body.classList.contains('viewing-project');
+  return Boolean(editingField || reading);
+}
+
+setInterval(() => {
+  if (isVisitorBusy()) return;
+  loadPortfolioData({ silent: true });
+}, 15000);

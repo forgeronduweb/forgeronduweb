@@ -679,6 +679,10 @@
     color: var(--text-muted);
     line-height: 1.6;
     margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .project-tech {

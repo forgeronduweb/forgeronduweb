@@ -224,7 +224,7 @@ function logout() {
 
 // ═══════════════ CHARGEMENT / RENDU ═══════════════
 
-async function init() {
+async function init({ silent = false } = {}) {
   try {
     const response = await fetch(`${API_BASE}/portfolio`);
     if (!response.ok) throw new Error('Erreur API');
@@ -259,7 +259,7 @@ async function init() {
     return true;
   } catch (error) {
     console.error('Erreur de chargement de l\'admin', error);
-    showToast('Connexion au backend impossible', 'error');
+    if (!silent) showToast('Connexion au backend impossible', 'error');
     return false;
   }
 }
@@ -1227,7 +1227,16 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Repère si l'admin est en train de taper ou a une modale ouverte, pour ne jamais
+// écraser une saisie en cours pendant le rafraîchissement automatique en arrière-plan.
+function isAdminBusy() {
+  const active = document.activeElement;
+  const editingField = active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
+  const modalOpen = document.querySelector('.modal-overlay.open:not(#login-screen)');
+  return Boolean(editingField || modalOpen);
+}
+
 setInterval(() => {
-  updateLastSync();
-  if (portfolio.articles.length || portfolio.projects.length) renderRecentActivity();
-}, 30000);
+  if (!getToken() || isAdminBusy()) return;
+  init({ silent: true });
+}, 15000);

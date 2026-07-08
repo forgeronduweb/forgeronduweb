@@ -212,6 +212,22 @@
     scroll-margin-top: 64px;
   }
 
+  /* Lecture d'un article : seule la section Blog reste visible, le reste du one-page est masqué. */
+  body.viewing-article .section:not(#blog) {
+    display: none;
+  }
+  body.viewing-article #blog .section-heading {
+    display: none;
+  }
+
+  /* Fiche projet : seule la section Projets reste visible, le reste du one-page est masqué. */
+  body.viewing-project .section:not(#projects) {
+    display: none;
+  }
+  body.viewing-project #projects .section-heading {
+    display: none;
+  }
+
   .section-heading {
     padding: 56px 96px 0;
   }
@@ -561,10 +577,66 @@
     background: linear-gradient(90deg, transparent, var(--blue), transparent);
     opacity: 0;
     transition: opacity 0.3s;
+    z-index: 4;
+  }
+
+  .project-hover-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .project-card.has-image:hover .project-hover-image {
+    opacity: 1;
+  }
+
+  /* Voile sombre au-dessus de l'image pour garder le texte lisible quel que soit son contenu. */
+  .project-card.has-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.88) 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .project-card.has-image:hover::after {
+    opacity: 1;
+  }
+
+  .project-content {
+    position: relative;
+    z-index: 3;
   }
 
   .project-card:hover { background: rgba(255,255,255,0.015); }
   .project-card:hover::before { opacity: 1; }
+
+  .project-card.has-image:hover .project-name,
+  .project-card.has-image:hover .project-link {
+    color: #fff;
+  }
+
+  .project-card.has-image:hover .project-desc {
+    color: rgba(255,255,255,0.85);
+  }
+
+  .project-card.has-image:hover .tech-tag {
+    color: #fff;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .project-card.has-image:hover .project-link:hover {
+    color: var(--blue);
+  }
 
   .project-header {
     display: flex;
@@ -1076,6 +1148,78 @@
   .comment-form .comment-submit:hover { opacity: .88; }
   .comment-feedback { font-size: 12px; margin: 0; }
 
+  /* ─── PROJECT DETAIL VIEW ─── */
+  .project-view {
+    display: none;
+    padding: 48px 96px 80px;
+    max-width: 820px;
+  }
+
+  .project-view.active { display: block; animation: fadeIn 0.2s; }
+
+  .project-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    cursor: pointer;
+    margin-bottom: 32px;
+    transition: color 0.15s;
+  }
+
+  .project-back:hover { color: var(--text); }
+
+  .project-view-image {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .project-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .project-view-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .project-view-tech {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .project-view-desc {
+    font-size: 15px;
+    line-height: 1.85;
+    color: #c9c9c9;
+    margin-bottom: 28px;
+    white-space: pre-line;
+  }
+
+  .project-view-links {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .project-cta {
+    margin-bottom: 28px;
+  }
+
   @media (max-width: 768px) {
     .article-view { padding: 32px 24px 60px; }
+    .project-view { padding: 32px 24px 60px; }
   }

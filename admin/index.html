@@ -534,6 +534,17 @@
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Ajouter un projet</div><div class="modal-close" onclick="closeModal('new-projet')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Image du projet <span style="font-weight:400;color:var(--muted)">(affichée au survol)</span></label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:64px;height:64px;border-radius:8px;overflow:hidden;background:var(--bg4);border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <img id="new-projet-image-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
+            <span id="new-projet-image-placeholder" style="font-size:10px;color:var(--muted)">Aucune</span>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="document.getElementById('new-projet-image-file').click()">Choisir une image</button>
+          <input type="file" id="new-projet-image-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleNewProjectImageSelect(event)">
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Nom<span>*</span></label><input class="form-input" type="text" id="new-projet-name" placeholder="Mon Projet..."></div>
       </div>
@@ -543,7 +554,31 @@
         <div class="form-group"><label class="form-label">Lien démo</label><input class="form-input mono" type="url" id="new-projet-demo" placeholder="https://..."></div>
       </div>
       <div class="form-group"><label class="form-label">Lien GitHub</label><input class="form-input mono" type="url" id="new-projet-github" placeholder="https://github.com/..."></div>
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">Technologies</label><input class="form-input" type="text" id="new-projet-tech" placeholder="React, Next.js, Node.js..."><div class="form-hint">Sépare les technos par une virgule</div></div>
+      <div class="form-group"><label class="form-label">Technologies</label><input class="form-input" type="text" id="new-projet-tech" placeholder="React, Next.js, Node.js..."><div class="form-hint">Sépare les technos par une virgule</div></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Téléchargement</label>
+          <select class="form-input" id="new-projet-download-type" onchange="toggleDownloadPriceField('new-projet')">
+            <option value="none">Non téléchargeable</option>
+            <option value="free">Gratuit</option>
+            <option value="paid">Payant</option>
+          </select>
+        </div>
+        <div class="form-group" id="new-projet-price-group" style="display:none"><label class="form-label">Prix (FCFA)</label><input class="form-input" type="number" min="0" step="100" id="new-projet-price" placeholder="5000"></div>
+      </div>
+      <div class="form-group" id="new-projet-payment-link-group" style="display:none">
+        <label class="form-label">Lien de paiement</label>
+        <input class="form-input mono" type="url" id="new-projet-payment-link" placeholder="https://pay.wave.com/m/...">
+        <div class="form-hint">L'acheteur sera redirigé vers ce lien (Wave, Orange Money...) pour payer.</div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Fichier à télécharger</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn btn-ghost" style="font-size:12px" onclick="document.getElementById('new-projet-download-file').click()">Choisir un fichier</button>
+          <span id="new-projet-download-filename" style="font-size:12px;color:var(--muted)">Aucun fichier</span>
+        </div>
+        <input type="file" id="new-projet-download-file" accept=".zip,.pdf,application/zip,application/pdf" style="display:none" onchange="handleNewProjectDownloadFileSelect(event)">
+        <div class="form-hint">ZIP ou PDF, 8 Mo max</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-projet')">Annuler</button>
@@ -556,6 +591,17 @@
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Modifier le projet</div><div class="modal-close" onclick="closeModal('edit-projet')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Image du projet</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:64px;height:64px;border-radius:8px;overflow:hidden;background:var(--bg4);border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <img id="edit-projet-image-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
+            <span id="edit-projet-image-placeholder" style="font-size:10px;color:var(--muted)">Aucune</span>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="document.getElementById('edit-projet-image-file').click()">Choisir une image</button>
+          <input type="file" id="edit-projet-image-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadProjectImage(event)">
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Nom<span>*</span></label><input class="form-input" type="text" id="edit-projet-name"></div>
       </div>
@@ -565,7 +611,32 @@
         <div class="form-group"><label class="form-label">Lien démo</label><input class="form-input mono" type="url" id="edit-projet-demo"></div>
       </div>
       <div class="form-group"><label class="form-label">Lien GitHub</label><input class="form-input mono" type="url" id="edit-projet-github"></div>
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">Technologies</label><input class="form-input" type="text" id="edit-projet-tech"></div>
+      <div class="form-group"><label class="form-label">Technologies</label><input class="form-input" type="text" id="edit-projet-tech"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Téléchargement</label>
+          <select class="form-input" id="edit-projet-download-type" onchange="toggleDownloadPriceField('edit-projet')">
+            <option value="none">Non téléchargeable</option>
+            <option value="free">Gratuit</option>
+            <option value="paid">Payant</option>
+          </select>
+        </div>
+        <div class="form-group" id="edit-projet-price-group" style="display:none"><label class="form-label">Prix (FCFA)</label><input class="form-input" type="number" min="0" step="100" id="edit-projet-price" placeholder="5000"></div>
+      </div>
+      <div class="form-group" id="edit-projet-payment-link-group" style="display:none">
+        <label class="form-label">Lien de paiement</label>
+        <input class="form-input mono" type="url" id="edit-projet-payment-link" placeholder="https://pay.wave.com/m/...">
+        <div class="form-hint">L'acheteur sera redirigé vers ce lien (Wave, Orange Money...) pour payer.</div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Fichier à télécharger</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn btn-ghost" style="font-size:12px" onclick="document.getElementById('edit-projet-download-file').click()">Choisir un fichier</button>
+          <span id="edit-projet-download-filename" style="font-size:12px;color:var(--muted)">Aucun fichier</span>
+          <button class="btn btn-ghost" id="edit-projet-download-remove" style="font-size:12px;display:none;color:var(--red)" onclick="removeProjectDownloadFile()">Retirer</button>
+        </div>
+        <input type="file" id="edit-projet-download-file" accept=".zip,.pdf,application/zip,application/pdf" style="display:none" onchange="uploadProjectDownloadFile(event)">
+        <div class="form-hint">ZIP ou PDF, 8 Mo max</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('edit-projet')">Annuler</button>

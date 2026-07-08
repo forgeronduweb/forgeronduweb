@@ -23,7 +23,11 @@ menuToggle?.addEventListener('click', () => {
 mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
 
 document.querySelectorAll('.nav-link[data-section], .mobile-link[data-section]').forEach(link => {
-  link.addEventListener('click', closeMobileMenu);
+  link.addEventListener('click', () => {
+    closeMobileMenu();
+    if (document.body.classList.contains('viewing-article')) hideArticle();
+    if (document.body.classList.contains('viewing-project')) hideProject();
+  });
 });
 
 function setActiveNav(name) {
@@ -45,10 +49,12 @@ scrollSpySections.forEach(id => {
 });
 
 function showArticle(id) {
+  if (document.body.classList.contains('viewing-project')) hideProject();
   document.getElementById('blog-list').style.display = 'none';
   document.querySelectorAll('.article-view').forEach(a => a.classList.remove('active'));
   document.getElementById('article-' + id)?.classList.add('active');
-  document.getElementById('blog')?.scrollIntoView();
+  document.body.classList.add('viewing-article');
+  window.scrollTo(0, 0);
   history.replaceState(null, '', '#article-' + id);
   loadComments(id);
 }
@@ -56,6 +62,7 @@ function showArticle(id) {
 function hideArticle() {
   document.querySelectorAll('.article-view').forEach(a => a.classList.remove('active'));
   document.getElementById('blog-list').style.display = '';
+  document.body.classList.remove('viewing-article');
   if (location.hash.startsWith('#article-')) {
     history.replaceState(null, '', location.pathname + location.search);
   }
@@ -68,6 +75,77 @@ function openArticleFromHash() {
   if (document.getElementById('article-' + id)) {
     showArticle(id);
   }
+}
+
+function showProject(id) {
+  if (document.body.classList.contains('viewing-article')) hideArticle();
+  document.querySelector('.projects-grid').style.display = 'none';
+  document.querySelector('.projects-filters').style.display = 'none';
+  document.querySelectorAll('.project-view').forEach(p => p.classList.remove('active'));
+  document.getElementById('project-' + id)?.classList.add('active');
+  document.body.classList.add('viewing-project');
+  window.scrollTo(0, 0);
+  history.replaceState(null, '', '#projet-' + id);
+}
+
+function hideProject() {
+  document.querySelectorAll('.project-view').forEach(p => p.classList.remove('active'));
+  document.querySelector('.projects-grid').style.display = '';
+  document.querySelector('.projects-filters').style.display = '';
+  document.body.classList.remove('viewing-project');
+  if (location.hash.startsWith('#projet-')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+}
+
+function openProjectFromHash() {
+  const hash = location.hash;
+  if (!hash.startsWith('#projet-')) return;
+  const id = hash.slice('#projet-'.length);
+  if (document.getElementById('project-' + id)) {
+    showProject(id);
+  }
+}
+
+function prefillContactForm(subject, message) {
+  const subjectInput = document.querySelector('#contact-form input[name="subject"]');
+  const messageInput = document.querySelector('#contact-form textarea[name="message"]');
+  if (subjectInput) subjectInput.value = subject;
+  if (messageInput) messageInput.value = message;
+}
+
+// Paiement Wave ouvert dans un nouvel onglet ; on pré-remplit le formulaire de contact
+// en tâche de fond pour que l'acheteur puisse envoyer sa preuve de paiement au retour.
+function notifyPurchaseIntent(id) {
+  const project = (window.portfolioProjectsById || {})[id];
+  if (!project) return;
+  prefillContactForm(
+    `Achat du projet "${project.name}"`,
+    `Bonjour, je viens de payer ${project.price} ${project.currency || 'XOF'} pour le projet "${project.name}". Merci de m'envoyer le fichier !`
+  );
+}
+
+// Pas de lien de paiement configuré pour ce projet : on renvoie vers le contact plutôt que rien.
+function requestPurchaseContact(id) {
+  const project = (window.portfolioProjectsById || {})[id];
+  if (!project) return;
+  hideProject();
+  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+  prefillContactForm(
+    `Achat du projet "${project.name}"`,
+    `Bonjour, je suis intéressé(e) par l'achat du projet "${project.name}" (${project.price} ${project.currency || 'XOF'}). Comment procéder ?`
+  );
+}
+
+function requestFreeFile(id) {
+  const project = (window.portfolioProjectsById || {})[id];
+  if (!project) return;
+  hideProject();
+  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+  prefillContactForm(
+    `Téléchargement du projet "${project.name}"`,
+    `Bonjour, je suis intéressé(e) par le projet "${project.name}" (gratuit). Peux-tu me l'envoyer ?`
+  );
 }
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -356,28 +434,73 @@ async function loadPortfolioData() {
     }
 
     const projectsGrid = document.querySelector('.projects-grid');
+    const projectViews = document.getElementById('project-views');
+    window.portfolioProjectsById = {};
     if (projectsGrid) {
       projectsGrid.innerHTML = '';
+      if (projectViews) projectViews.innerHTML = '';
       data.projects.forEach(project => {
+        window.portfolioProjectsById[project.id] = project;
+
         const card = document.createElement('div');
-        card.className = 'project-card';
+        card.className = 'project-card' + (project.imageUrl ? ' has-image' : '');
+        card.onclick = () => showProject(project.id);
         const demoHref = safeHref(project.demo);
         const githubHref = safeHref(project.github);
         card.innerHTML = `
-          <div class="project-header">
-            <div class="project-name">${escapeHtml(project.name)}</div>
-            <div class="project-status ${project.status === 'Live' ? 'live' : 'wip'}">${escapeHtml(project.status)}</div>
-          </div>
-          <div class="project-desc">${escapeHtml(project.description)}</div>
-          <div class="project-tech">
-            ${(project.tech || []).map(tag => `<span class="tech-tag">${escapeHtml(tag)}</span>`).join('')}
-          </div>
-          <div class="project-links">
-            ${demoHref ? `<a class="project-link" href="${escapeHtml(demoHref)}" target="_blank" rel="noopener">↗ Démo</a>` : ''}
-            ${githubHref ? `<a class="project-link" href="${escapeHtml(githubHref)}" target="_blank" rel="noopener">⌥ GitHub</a>` : ''}
+          ${project.imageUrl ? `<img class="project-hover-image" src="${escapeHtml(project.imageUrl)}" alt="" loading="lazy">` : ''}
+          <div class="project-content">
+            <div class="project-header">
+              <div class="project-name">${escapeHtml(project.name)}</div>
+              <div class="project-status ${project.status === 'Live' ? 'live' : 'wip'}">${escapeHtml(project.status)}</div>
+            </div>
+            <div class="project-desc">${escapeHtml(project.description)}</div>
+            <div class="project-tech">
+              ${(project.tech || []).map(tag => `<span class="tech-tag">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            <div class="project-links">
+              ${demoHref ? `<a class="project-link" href="${escapeHtml(demoHref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Démo</a>` : ''}
+              ${githubHref ? `<a class="project-link" href="${escapeHtml(githubHref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">⌥ GitHub</a>` : ''}
+            </div>
           </div>`;
         projectsGrid.appendChild(card);
+
+        if (projectViews) {
+          let downloadCta = '';
+          if (project.downloadType === 'free') {
+            downloadCta = project.downloadFileUrl
+              ? `<a class="btn-hero-secondary project-cta" href="${escapeHtml(project.downloadFileUrl)}" download="${escapeHtml(project.downloadFileName || project.name)}">⬇ Télécharger gratuitement</a>`
+              : `<a class="btn-hero-secondary project-cta" href="#contact" onclick="requestFreeFile('${project.id}')">⬇ Obtenir gratuitement</a>`;
+          } else if (project.downloadType === 'paid') {
+            const paymentHref = safeHref(project.paymentLink);
+            downloadCta = paymentHref
+              ? `<a class="btn-hero-secondary project-cta" href="${escapeHtml(paymentHref)}" target="_blank" rel="noopener" onclick="notifyPurchaseIntent('${project.id}')">💳 Acheter — ${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}</a>`
+              : `<a class="btn-hero-secondary project-cta" href="#contact" onclick="requestPurchaseContact('${project.id}')">💳 Acheter — ${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}</a>`;
+          }
+
+          const view = document.createElement('div');
+          view.className = 'project-view';
+          view.id = 'project-' + project.id;
+          view.innerHTML = `
+            <div class="project-back" onclick="hideProject()">← Retour aux projets</div>
+            ${project.imageUrl ? `<img class="project-view-image" src="${escapeHtml(project.imageUrl)}" alt="">` : ''}
+            <div class="project-view-header">
+              <div class="project-view-title">${escapeHtml(project.name)}</div>
+              <div class="project-status ${project.status === 'Live' ? 'live' : 'wip'}">${escapeHtml(project.status)}</div>
+            </div>
+            <div class="project-view-tech">
+              ${(project.tech || []).map(tag => `<span class="tech-tag">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            <div class="project-view-desc">${escapeHtml(project.description)}</div>
+            <div class="project-view-links">
+              ${demoHref ? `<a class="project-link" href="${escapeHtml(demoHref)}" target="_blank" rel="noopener">↗ Démo</a>` : ''}
+              ${githubHref ? `<a class="project-link" href="${escapeHtml(githubHref)}" target="_blank" rel="noopener">⌥ GitHub</a>` : ''}
+            </div>
+            ${downloadCta}`;
+          projectViews.appendChild(view);
+        }
       });
+      openProjectFromHash();
     }
 
     const blogList = document.getElementById('blog-list');

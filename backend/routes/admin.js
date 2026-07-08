@@ -12,7 +12,7 @@ const { loginLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
-const avatarUpload = multer({
+const imageUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
@@ -37,6 +37,43 @@ function matchesImageMagicBytes(buffer, mimetype) {
     return buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
   }
   return false;
+}
+
+function handleImageUpload(fieldName) {
+  return (req, res, next) => {
+    imageUpload.single(fieldName)(req, res, (err) => {
+      if (err) return res.status(400).json({ ok: false, message: err.message });
+      next();
+    });
+  };
+}
+
+const downloadUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!['application/zip', 'application/x-zip-compressed', 'application/pdf', 'application/octet-stream'].includes(file.mimetype)) {
+      return cb(new Error('Format non supporté (ZIP ou PDF uniquement)'));
+    }
+    cb(null, true);
+  }
+});
+
+// Détecte le vrai type via les premiers octets (ZIP ou PDF), indépendamment du Content-Type déclaré par le client.
+function detectDownloadMimetype(buffer) {
+  if (!buffer || buffer.length < 4) return null;
+  if (buffer[0] === 0x50 && buffer[1] === 0x4b && [0x03, 0x05, 0x07].includes(buffer[2])) return 'application/zip';
+  if (buffer.toString('ascii', 0, 4) === '%PDF') return 'application/pdf';
+  return null;
+}
+
+function handleDownloadUpload(fieldName) {
+  return (req, res, next) => {
+    downloadUpload.single(fieldName)(req, res, (err) => {
+      if (err) return res.status(400).json({ ok: false, message: err.message });
+      next();
+    });
+  };
 }
 
 function slugify(text) {
@@ -97,12 +134,7 @@ router.put('/profile', async (req, res) => {
   res.json({ ok: true, profile });
 });
 
-router.post('/profile/avatar', (req, res, next) => {
-  avatarUpload.single('avatar')(req, res, (err) => {
-    if (err) return res.status(400).json({ ok: false, message: err.message });
-    next();
-  });
-}, async (req, res) => {
+router.post('/profile/avatar', handleImageUpload('avatar'), async (req, res) => {
   if (!req.file) return res.status(400).json({ ok: false, message: 'Aucun fichier reçu' });
   if (!matchesImageMagicBytes(req.file.buffer, req.file.mimetype)) {
     return res.status(400).json({ ok: false, message: 'Le fichier ne semble pas être une image valide' });
@@ -112,6 +144,20 @@ router.post('/profile/avatar', (req, res, next) => {
   const profile = await Profile.findOneAndUpdate({}, { avatarUrl }, { upsert: true, returnDocument: 'after' });
   res.json({ ok: true, avatarUrl, profile });
 });
+
+const DOWNLOAD_TYPES = ['none', 'free', 'paid'];
+
+function resolveDownloadFields({ downloadType, price, currency, paymentLink }) {
+  const resolvedType = DOWNLOAD_TYPES.includes(downloadType) ? downloadType : 'none';
+  const resolvedPrice = resolvedType === 'paid' && Number.isFinite(Number(price)) ? Math.max(0, Number(price)) : 0;
+  const resolvedLink = /^https?:\/\//i.test(String(paymentLink ?? '').trim()) ? String(paymentLink).trim() : '';
+  return {
+    downloadType: resolvedType,
+    price: resolvedPrice,
+    currency: currency || 'XOF',
+    paymentLink: resolvedLink
+  };
+}
 
 router.post('/projects', async (req, res) => {
   const { name, description, status, tech, demo, github } = req.body || {};
@@ -126,7 +172,8 @@ router.post('/projects', async (req, res) => {
     status: status || 'En cours',
     tech: Array.isArray(tech) ? tech : [],
     demo: demo || '',
-    github: github || ''
+    github: github || '',
+    ...resolveDownloadFields(req.body || {})
   });
   res.status(201).json({ ok: true, project });
 });
@@ -145,7 +192,8 @@ router.put('/projects/:id', async (req, res) => {
       ...(status ? { status } : {}),
       ...(Array.isArray(tech) ? { tech } : {}),
       ...(demo !== undefined ? { demo } : {}),
-      ...(github !== undefined ? { github } : {})
+      ...(github !== undefined ? { github } : {}),
+      ...resolveDownloadFields(req.body || {})
     },
     { returnDocument: 'after' }
   );
@@ -157,6 +205,45 @@ router.delete('/projects/:id', async (req, res) => {
   const project = await Project.findOneAndDelete({ id: req.params.id });
   if (!project) return res.status(404).json({ ok: false, message: 'Projet introuvable' });
   res.json({ ok: true });
+});
+
+router.post('/projects/:id/image', handleImageUpload('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, message: 'Aucun fichier reçu' });
+  if (!matchesImageMagicBytes(req.file.buffer, req.file.mimetype)) {
+    return res.status(400).json({ ok: false, message: 'Le fichier ne semble pas être une image valide' });
+  }
+
+  const imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+  const project = await Project.findOneAndUpdate({ id: req.params.id }, { imageUrl }, { returnDocument: 'after' });
+  if (!project) return res.status(404).json({ ok: false, message: 'Projet introuvable' });
+  res.json({ ok: true, imageUrl, project });
+});
+
+router.post('/projects/:id/download-file', handleDownloadUpload('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, message: 'Aucun fichier reçu' });
+  const detectedMimetype = detectDownloadMimetype(req.file.buffer);
+  if (!detectedMimetype) {
+    return res.status(400).json({ ok: false, message: 'Le fichier ne semble pas être un ZIP ou un PDF valide' });
+  }
+
+  const downloadFileUrl = `data:${detectedMimetype};base64,${req.file.buffer.toString('base64')}`;
+  const project = await Project.findOneAndUpdate(
+    { id: req.params.id },
+    { downloadFileUrl, downloadFileName: req.file.originalname },
+    { returnDocument: 'after' }
+  );
+  if (!project) return res.status(404).json({ ok: false, message: 'Projet introuvable' });
+  res.json({ ok: true, downloadFileUrl, downloadFileName: req.file.originalname, project });
+});
+
+router.delete('/projects/:id/download-file', async (req, res) => {
+  const project = await Project.findOneAndUpdate(
+    { id: req.params.id },
+    { downloadFileUrl: '', downloadFileName: '' },
+    { returnDocument: 'after' }
+  );
+  if (!project) return res.status(404).json({ ok: false, message: 'Projet introuvable' });
+  res.json({ ok: true, project });
 });
 
 router.post('/articles', async (req, res) => {

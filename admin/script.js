@@ -11,6 +11,8 @@ let messages = [];
 let settings = {};
 let avatarUrlDirty = false;
 let editingProjectId = null;
+let newProjectImageFile = null;
+let newProjectDownloadFile = null;
 let editingArticleId = null;
 let deleteContext = null;
 let articleFilter = 'all';
@@ -85,6 +87,7 @@ sidebarOverlay?.addEventListener('click', closeSidebar);
 function showModal(id) {
   const el = document.getElementById('modal-' + id);
   if (el) el.classList.add('open');
+  if (id === 'new-projet') { resetNewProjectImage(); resetNewProjectDownload(); }
 }
 function closeModal(id) {
   const el = document.getElementById('modal-' + id);
@@ -424,6 +427,8 @@ function renderProjects() {
         <div class="proj-tags">${(project.tech || []).map(t => `<span class="proj-tag">${escapeHtml(t)}</span>`).join('')}</div>
       </div>
       <div class="proj-actions">
+        ${project.downloadType === 'paid' ? `<span class="badge badge-blue">${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}</span>` : ''}
+        ${project.downloadType === 'free' ? '<span class="badge badge-green">Gratuit</span>' : ''}
         <span class="badge ${statusBadgeClass(project.status)}">${escapeHtml(project.status)}</span>
         <div class="icon-btn edit-btn">${EDIT_ICON}</div>
         <div class="icon-btn danger delete-btn">${DELETE_ICON}</div>
@@ -819,7 +824,172 @@ function openEditProject(id) {
   document.getElementById('edit-projet-demo').value = project.demo || '';
   document.getElementById('edit-projet-github').value = project.github || '';
   document.getElementById('edit-projet-tech').value = (project.tech || []).join(', ');
+  setProjectImagePreview(project.imageUrl || '');
+  document.getElementById('edit-projet-download-type').value = project.downloadType || 'none';
+  document.getElementById('edit-projet-price').value = project.price || '';
+  document.getElementById('edit-projet-payment-link').value = project.paymentLink || '';
+  toggleDownloadPriceField('edit-projet');
+  setProjectDownloadFilename(project.downloadFileName || '', 'edit-projet');
   showModal('edit-projet');
+}
+
+function toggleDownloadPriceField(prefix) {
+  const type = document.getElementById(`${prefix}-download-type`).value;
+  const display = type === 'paid' ? '' : 'none';
+  const priceGroup = document.getElementById(`${prefix}-price-group`);
+  if (priceGroup) priceGroup.style.display = display;
+  const linkGroup = document.getElementById(`${prefix}-payment-link-group`);
+  if (linkGroup) linkGroup.style.display = display;
+}
+
+function setProjectDownloadFilename(name, prefix = 'edit-projet') {
+  const label = document.getElementById(`${prefix}-download-filename`);
+  if (label) label.textContent = name || 'Aucun fichier';
+  const removeBtn = document.getElementById(`${prefix}-download-remove`);
+  if (removeBtn) removeBtn.style.display = name ? '' : 'none';
+}
+
+function setProjectImagePreview(url, prefix = 'edit-projet') {
+  const img = document.getElementById(`${prefix}-image-preview`);
+  const placeholder = document.getElementById(`${prefix}-image-placeholder`);
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    placeholder.style.display = '';
+  }
+}
+
+async function uploadProjectImageFile(projectId, file) {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const token = getToken();
+  const response = await fetch(`${API_BASE}/admin/projects/${projectId}/image`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData
+  });
+  if (response.status === 401) {
+    clearToken();
+    showLoginScreen();
+    throw new Error('Non autorisé');
+  }
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.message || 'Erreur');
+  return body;
+}
+
+async function uploadProjectImage(event) {
+  const file = event.target.files[0];
+  if (!file || !editingProjectId) return;
+
+  try {
+    const body = await uploadProjectImageFile(editingProjectId, file);
+    const index = portfolio.projects.findIndex(p => p.id === editingProjectId);
+    if (index !== -1) portfolio.projects[index] = body.project;
+    setProjectImagePreview(body.imageUrl);
+    renderProjects();
+    showToast('Image mise à jour', 'success');
+  } catch (error) {
+    showToast(error.message || 'Échec de l\'upload', 'error');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+function resetNewProjectImage() {
+  newProjectImageFile = null;
+  setProjectImagePreview('', 'new-projet');
+  const input = document.getElementById('new-projet-image-file');
+  if (input) input.value = '';
+}
+
+function handleNewProjectImageSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  newProjectImageFile = file;
+  const reader = new FileReader();
+  reader.onload = () => setProjectImagePreview(reader.result, 'new-projet');
+  reader.readAsDataURL(file);
+}
+
+async function uploadProjectDownloadFileRequest(projectId, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const token = getToken();
+  const response = await fetch(`${API_BASE}/admin/projects/${projectId}/download-file`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData
+  });
+  if (response.status === 401) {
+    clearToken();
+    showLoginScreen();
+    throw new Error('Non autorisé');
+  }
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.message || 'Erreur');
+  return body;
+}
+
+async function uploadProjectDownloadFile(event) {
+  const file = event.target.files[0];
+  if (!file || !editingProjectId) return;
+
+  try {
+    const body = await uploadProjectDownloadFileRequest(editingProjectId, file);
+    const index = portfolio.projects.findIndex(p => p.id === editingProjectId);
+    if (index !== -1) portfolio.projects[index] = body.project;
+    setProjectDownloadFilename(body.downloadFileName, 'edit-projet');
+    renderProjects();
+    showToast('Fichier mis à jour', 'success');
+  } catch (error) {
+    showToast(error.message || 'Échec de l\'upload', 'error');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function removeProjectDownloadFile() {
+  if (!editingProjectId) return;
+  try {
+    const response = await apiFetch(`/admin/projects/${editingProjectId}/download-file`, { method: 'DELETE' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    const index = portfolio.projects.findIndex(p => p.id === editingProjectId);
+    if (index !== -1) portfolio.projects[index] = body.project;
+    setProjectDownloadFilename('', 'edit-projet');
+    renderProjects();
+    showToast('Fichier supprimé', 'success');
+  } catch (error) {
+    showToast(error.message || 'Échec de la suppression', 'error');
+  }
+}
+
+function resetNewProjectDownload() {
+  newProjectDownloadFile = null;
+  setProjectDownloadFilename('', 'new-projet');
+  const typeSelect = document.getElementById('new-projet-download-type');
+  if (typeSelect) typeSelect.value = 'none';
+  const priceInput = document.getElementById('new-projet-price');
+  if (priceInput) priceInput.value = '';
+  const linkInput = document.getElementById('new-projet-payment-link');
+  if (linkInput) linkInput.value = '';
+  toggleDownloadPriceField('new-projet');
+  const input = document.getElementById('new-projet-download-file');
+  if (input) input.value = '';
+}
+
+function handleNewProjectDownloadFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  newProjectDownloadFile = file;
+  setProjectDownloadFilename(file.name, 'new-projet');
 }
 
 function parseTechInput(value) {
@@ -827,13 +997,17 @@ function parseTechInput(value) {
 }
 
 async function submitNewProject() {
+  const downloadType = document.getElementById('new-projet-download-type').value;
   const payload = {
     name: document.getElementById('new-projet-name').value.trim(),
     description: document.getElementById('new-projet-description').value.trim(),
     status: document.getElementById('new-projet-status').value,
     demo: document.getElementById('new-projet-demo').value.trim(),
     github: document.getElementById('new-projet-github').value.trim(),
-    tech: parseTechInput(document.getElementById('new-projet-tech').value)
+    tech: parseTechInput(document.getElementById('new-projet-tech').value),
+    downloadType,
+    price: downloadType === 'paid' ? Number(document.getElementById('new-projet-price').value) || 0 : 0,
+    paymentLink: document.getElementById('new-projet-payment-link').value.trim()
   };
   if (!payload.name || !payload.description) {
     showToast('Nom et description sont requis', 'error');
@@ -845,10 +1019,30 @@ async function submitNewProject() {
     const body = await response.json();
     if (!response.ok) throw new Error(body.message || 'Erreur');
 
-    portfolio.projects.push(body.project);
+    let project = body.project;
+    if (newProjectImageFile) {
+      try {
+        const imageBody = await uploadProjectImageFile(project.id, newProjectImageFile);
+        project = imageBody.project;
+      } catch (imageError) {
+        showToast(imageError.message || 'Projet créé, mais échec de l\'upload de l\'image', 'error');
+      }
+    }
+    if (newProjectDownloadFile) {
+      try {
+        const fileBody = await uploadProjectDownloadFileRequest(project.id, newProjectDownloadFile);
+        project = fileBody.project;
+      } catch (fileError) {
+        showToast(fileError.message || 'Projet créé, mais échec de l\'upload du fichier', 'error');
+      }
+    }
+
+    portfolio.projects.push(project);
     ['name', 'description', 'demo', 'github', 'tech'].forEach(field => {
       document.getElementById(`new-projet-${field}`).value = '';
     });
+    resetNewProjectImage();
+    resetNewProjectDownload();
     renderProjects();
     renderDashboardStats();
     closeModal('new-projet');
@@ -860,13 +1054,17 @@ async function submitNewProject() {
 
 async function submitEditProject() {
   if (!editingProjectId) return;
+  const editDownloadType = document.getElementById('edit-projet-download-type').value;
   const payload = {
     name: document.getElementById('edit-projet-name').value.trim(),
     description: document.getElementById('edit-projet-description').value.trim(),
     status: document.getElementById('edit-projet-status').value,
     demo: document.getElementById('edit-projet-demo').value.trim(),
     github: document.getElementById('edit-projet-github').value.trim(),
-    tech: parseTechInput(document.getElementById('edit-projet-tech').value)
+    tech: parseTechInput(document.getElementById('edit-projet-tech').value),
+    downloadType: editDownloadType,
+    price: editDownloadType === 'paid' ? Number(document.getElementById('edit-projet-price').value) || 0 : 0,
+    paymentLink: document.getElementById('edit-projet-payment-link').value.trim()
   };
   if (!payload.name || !payload.description) {
     showToast('Nom et description sont requis', 'error');

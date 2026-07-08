@@ -5,6 +5,7 @@ const Project = require('../models/Project');
 const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
+const Order = require('../models/Order');
 const Settings = require('../models/Settings');
 const { resetToSeed } = require('../data/seed');
 const { signToken, requireAdmin, safeCompare } = require('../middleware/auth');
@@ -331,6 +332,29 @@ router.put('/messages/:id/read', async (req, res) => {
 router.delete('/messages/:id', async (req, res) => {
   const message = await Message.findByIdAndDelete(req.params.id);
   if (!message) return res.status(404).json({ ok: false, message: 'Message introuvable' });
+  res.json({ ok: true });
+});
+
+router.get('/orders', async (_req, res) => {
+  const orders = await Order.find().sort({ createdAt: -1 });
+  res.json({ ok: true, orders });
+});
+
+router.put('/orders/:id/mark-paid', async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ ok: false, message: 'Commande introuvable' });
+  if (order.status !== 'paid') {
+    order.status = 'paid';
+    order.paidAt = new Date();
+    order.downloadToken = Order.generateDownloadToken();
+    await order.save();
+  }
+  res.json({ ok: true, order });
+});
+
+router.delete('/orders/:id', async (req, res) => {
+  const order = await Order.findByIdAndDelete(req.params.id);
+  if (!order) return res.status(404).json({ ok: false, message: 'Commande introuvable' });
   res.json({ ok: true });
 });
 

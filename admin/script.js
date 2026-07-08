@@ -8,6 +8,7 @@ const APPROVE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 let portfolio = { profile: {}, projects: [], articles: [] };
 let comments = [];
 let messages = [];
+let orders = [];
 let settings = {};
 let avatarUrlDirty = false;
 let editingProjectId = null;
@@ -18,6 +19,7 @@ let deleteContext = null;
 let articleFilter = 'all';
 let commentFilter = 'all';
 let messageFilter = 'all';
+let orderFilter = 'all';
 let lastSyncAt = null;
 
 function escapeHtml(str) {
@@ -169,10 +171,21 @@ function applyFormat(textareaId, type) {
     return;
   }
 
-  const wrap = { bold: '**', italic: '*', code: '`' }[type];
+  if (type === 'code') {
+    const selected = value.slice(start, end) || 'votre code ici';
+    const block = '```langage\n' + selected + '\n```';
+    textarea.value = value.slice(0, start) + block + value.slice(end);
+    textarea.focus();
+    // Sélectionne "langage" pour que l'utilisateur puisse le remplacer immédiatement (ex: javascript, python, bash).
+    const langStart = start + 3;
+    textarea.setSelectionRange(langStart, langStart + 'langage'.length);
+    return;
+  }
+
+  const wrap = { bold: '**', italic: '*' }[type];
   if (!wrap) return;
 
-  const placeholders = { bold: 'texte en gras', italic: 'texte en italique', code: 'code' };
+  const placeholders = { bold: 'texte en gras', italic: 'texte en italique' };
   const selected = value.slice(start, end) || placeholders[type];
 
   textarea.value = value.slice(0, start) + wrap + selected + wrap + value.slice(end);
@@ -243,6 +256,10 @@ async function init({ silent = false } = {}) {
     const messagesBody = await messagesRes.json();
     messages = messagesBody.messages || [];
 
+    const ordersRes = await apiFetch('/admin/orders');
+    const ordersBody = await ordersRes.json();
+    orders = ordersBody.orders || [];
+
     const settingsRes = await apiFetch('/admin/settings');
     const settingsBody = await settingsRes.json();
     settings = settingsBody.settings || {};
@@ -255,6 +272,7 @@ async function init({ silent = false } = {}) {
     renderProfileForm();
     renderComments();
     renderMessages();
+    renderOrders();
     renderSettingsForm();
     return true;
   } catch (error) {
@@ -293,6 +311,10 @@ function renderDashboardStats() {
   const unreadMessages = messages.filter(m => !m.read).length;
   const badgeMessages = document.getElementById('badge-messages');
   if (badgeMessages) badgeMessages.textContent = unreadMessages;
+
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+  const badgeOrders = document.getElementById('badge-orders');
+  if (badgeOrders) badgeOrders.textContent = pendingOrders;
 
   renderSiteStatus();
   renderRecentActivity();
@@ -629,6 +651,102 @@ async function markMessageRead(id) {
     if (msg) msg.read = true;
     renderMessages();
     renderDashboardStats();
+  } catch (error) {
+    showToast(error.message || 'Échec de la mise à jour', 'error');
+  }
+}
+
+// ═══════════════ COMMANDES ═══════════════
+
+function setOrderFilter(filter, btn) {
+  orderFilter = filter;
+  filterToggle(btn);
+  renderOrders();
+}
+
+function renderOrders() {
+  const container = document.getElementById('orders-list');
+  if (!container) return;
+
+  const total = orders.length;
+  const pending = orders.filter(o => o.status === 'pending').length;
+  const paid = orders.filter(o => o.status === 'paid').length;
+  document.getElementById('order-count-all').textContent = total;
+  document.getElementById('order-count-pending').textContent = pending;
+  document.getElementById('order-count-paid').textContent = paid;
+
+  const visible = orders.filter(o => {
+    if (orderFilter === 'pending') return o.status === 'pending';
+    if (orderFilter === 'paid') return o.status === 'paid';
+    return true;
+  });
+
+  container.innerHTML = '';
+  if (!visible.length) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--muted)">Aucune commande.</p>';
+    return;
+  }
+
+  visible.forEach(order => {
+    const downloadLink = order.status === 'paid' ? `${location.origin}/api/orders/${order.downloadToken}/download` : '';
+    const card = document.createElement('div');
+    card.className = 'article-card';
+    card.innerHTML = `
+      <div class="article-card-top">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="comment-author">${escapeHtml(order.buyerName)}</span>
+          <span class="comment-article-ref">${escapeHtml(order.buyerEmail)}</span>
+          <span class="badge ${order.status === 'paid' ? 'badge-green' : 'badge-orange'}">${order.status === 'paid' ? 'Payée' : 'En attente'}</span>
+        </div>
+        <div class="article-actions">
+          ${order.status === 'pending' ? `<div class="icon-btn approve-btn" title="Marquer payé">${APPROVE_ICON}</div>` : ''}
+          <div class="icon-btn danger delete-btn" title="Supprimer">${DELETE_ICON}</div>
+        </div>
+      </div>
+      <div class="article-title">${escapeHtml(order.projectName)} — ${escapeHtml(String(order.price))} ${escapeHtml(order.currency || 'XOF')}</div>
+      <div class="comment-message">
+        ${order.buyerPhone ? `Téléphone : ${escapeHtml(order.buyerPhone)}<br>` : ''}
+        ${order.proofMethod === 'receipt'
+          ? `Preuve : <a href="${escapeHtml(order.receiptFileUrl)}" target="_blank" rel="noopener">voir le reçu PDF (${escapeHtml(order.receiptFileName || 'recu.pdf')})</a>`
+          : `Preuve : numéro Wave <strong>${escapeHtml(order.waveNumber)}</strong> · transaction <strong>${escapeHtml(order.transactionId)}</strong>`}
+      </div>
+      ${downloadLink ? `
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <input class="form-input mono" style="font-size:11px" readonly value="${escapeHtml(downloadLink)}">
+          <button class="btn btn-ghost copy-link-btn" style="font-size:12px;flex-shrink:0">Copier</button>
+        </div>` : ''}
+      <div class="article-meta"><span>Commandé le ${new Date(order.createdAt).toLocaleDateString('fr-FR')}</span>${order.paidAt ? `<span>Payé le ${new Date(order.paidAt).toLocaleDateString('fr-FR')}</span>` : ''}</div>`;
+    if (order.status === 'pending') {
+      card.querySelector('.approve-btn').addEventListener('click', () => markOrderPaid(order.id));
+    }
+    if (downloadLink) {
+      card.querySelector('.copy-link-btn').addEventListener('click', () => copyOrderLink(downloadLink));
+    }
+    card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete(`la commande de ${order.buyerName}`, 'orders', order.id));
+    container.appendChild(card);
+  });
+}
+
+async function copyOrderLink(link) {
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast('Lien copié', 'success');
+  } catch (error) {
+    showToast('Échec de la copie', 'error');
+  }
+}
+
+async function markOrderPaid(id) {
+  try {
+    const response = await apiFetch(`/admin/orders/${id}/mark-paid`, { method: 'PUT' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    const index = orders.findIndex(o => o.id === id);
+    if (index !== -1) orders[index] = body.order;
+    renderOrders();
+    renderDashboardStats();
+    showToast('Commande marquée payée — copie le lien pour l\'envoyer à l\'acheteur', 'success');
   } catch (error) {
     showToast(error.message || 'Échec de la mise à jour', 'error');
   }
@@ -1198,10 +1316,12 @@ async function performDelete() {
     if (type === 'articles') portfolio.articles = portfolio.articles.filter(a => a.id !== id);
     if (type === 'comments') comments = comments.filter(c => c.id !== id);
     if (type === 'messages') messages = messages.filter(m => m.id !== id);
+    if (type === 'orders') orders = orders.filter(o => o.id !== id);
     renderProjects();
     renderArticles();
     renderComments();
     renderMessages();
+    renderOrders();
     renderDashboardStats();
     showToast('Supprimé', 'info');
   } catch (error) {

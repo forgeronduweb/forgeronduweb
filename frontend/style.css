@@ -212,6 +212,11 @@
     scroll-margin-top: 64px;
   }
 
+  #home {
+    position: relative;
+    overflow: hidden;
+  }
+
   /* Lecture d'un article : seule la section Blog reste visible, le reste du one-page est masqué. */
   body.viewing-article .section:not(#blog) {
     display: none;
@@ -269,6 +274,30 @@
     height: 400px;
     background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
     pointer-events: none;
+  }
+
+  /* Effet de neige : des logos de langages/technos tombent doucement dans le hero. */
+  .code-snow {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .code-snow-icon {
+    position: absolute;
+    top: 0;
+    color: var(--text-faint);
+    animation-name: snow-fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+  }
+
+  @keyframes snow-fall {
+    from { transform: translateY(-40px) rotate(0deg); }
+    to { transform: translateY(2000px) rotate(20deg); }
   }
 
   .hero-badge {
@@ -845,6 +874,28 @@
   .form-input:focus { border-color: var(--border-hover); }
   .form-input::placeholder { color: var(--text-faint); }
 
+  .form-input[type="file"] {
+    padding: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .form-input[type="file"]::file-selector-button {
+    padding: 7px 14px;
+    margin-right: 10px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .form-input[type="file"]::file-selector-button:hover { opacity: 0.85; }
+
   textarea.form-input {
     resize: vertical;
     min-height: 100px;
@@ -1019,10 +1070,84 @@
   .article-view {
     display: none;
     padding: 48px 96px 80px;
-    max-width: 720px;
+    max-width: 1120px;
+    margin: 0 auto;
   }
 
   .article-view.active { display: block; animation: fadeIn 0.2s; }
+
+  .article-view-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 720px) 280px;
+    gap: 100px;
+    align-items: start;
+  }
+
+  .article-main { min-width: 0; }
+
+  .article-suggestions {
+    position: sticky;
+    top: 88px;
+  }
+
+  .article-suggestions-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  .suggestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .suggestion-card {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .suggestion-card:hover {
+    border-color: var(--border-hover);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .suggestion-cat {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+
+  .suggestion-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .suggestion-date {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 1100px) {
+    .article-view-layout { grid-template-columns: 1fr; }
+    .article-suggestions {
+      position: static;
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+  }
 
   .article-back {
     display: inline-flex;
@@ -1094,6 +1219,34 @@
     font-size: 12px;
     line-height: 1.7;
     color: var(--text-muted);
+  }
+
+  /* Bloc de code façon terminal (mêmes .terminal-bar/.dot que sur l'accueil) avec coloration syntaxique via highlight.js. */
+  .article-code-terminal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+
+  .article-body pre.article-code-body {
+    background: none;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+
+  .article-body pre.article-code-body code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
   }
 
   .article-actions-bar {
@@ -1221,6 +1374,41 @@
 
   .project-cta {
     margin-bottom: 28px;
+  }
+
+  .buy-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 340px;
+    margin: -14px 0 28px;
+  }
+
+  .buy-form-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .buy-form-proof-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .buy-form-proof-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .buy-form-feedback {
+    font-size: 12px;
+    margin: 0;
   }
 
   @media (max-width: 768px) {

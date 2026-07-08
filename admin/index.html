@@ -64,6 +64,11 @@
       Messages
       <span class="sb-badge" id="badge-messages">0</span>
     </a>
+    <a class="sb-link" data-page="commandes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Commandes
+      <span class="sb-badge" id="badge-orders">0</span>
+    </a>
     <div class="sb-section-label" style="margin-top:8px">Contenu</div>
     <a class="sb-link" data-page="medias">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
@@ -299,6 +304,22 @@
   <div class="page-body" style="display:flex;flex-direction:column;gap:12px" id="messages-list"></div>
 </div>
 
+<!-- ────────── COMMANDES ────────── -->
+<div class="page" id="page-commandes">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Commandes</div>
+      <div class="page-desc">Achats de projets via lien de paiement (Wave, etc.)</div>
+    </div>
+  </div>
+  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+    <button class="btn btn-ghost active-filter" data-filter="all" onclick="setOrderFilter('all',this)">Toutes (<span id="order-count-all">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="pending" onclick="setOrderFilter('pending',this)">En attente (<span id="order-count-pending">0</span>)</button>
+    <button class="btn btn-ghost" data-filter="paid" onclick="setOrderFilter('paid',this)">Payées (<span id="order-count-paid">0</span>)</button>
+  </div>
+  <div class="page-body" style="display:flex;flex-direction:column;gap:12px" id="orders-list"></div>
+</div>
+
 <!-- ────────── MÉDIAS ────────── -->
 <div class="page" id="page-medias">
   <div class="page-header">
@@ -490,7 +511,7 @@
           <div class="toolbar-sep"></div>
           <div class="toolbar-btn" onclick="applyFormat('new-article-content','code')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg></div>
         </div>
-        <textarea class="form-input editor-area mono" rows="8" id="new-article-content" placeholder="Écris ton article ici... (Markdown supporté : **gras**, *italique*, # titre, ## sous-titre, `code`)"></textarea>
+        <textarea class="form-input editor-area mono" rows="8" id="new-article-content" placeholder="Écris ton article ici... (Markdown supporté : **gras**, *italique*, # titre, ## sous-titre, `code`, ```langage pour un bloc de code)"></textarea>
       </div>
     </div>
     <div class="modal-footer">

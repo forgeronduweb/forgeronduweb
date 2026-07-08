@@ -114,27 +114,74 @@ function prefillContactForm(subject, message) {
   if (messageInput) messageInput.value = message;
 }
 
-// Paiement Wave ouvert dans un nouvel onglet ; on pré-remplit le formulaire de contact
-// en tâche de fond pour que l'acheteur puisse envoyer sa preuve de paiement au retour.
-function notifyPurchaseIntent(id) {
-  const project = (window.portfolioProjectsById || {})[id];
-  if (!project) return;
-  prefillContactForm(
-    `Achat du projet "${project.name}"`,
-    `Bonjour, je viens de payer ${project.price} ${project.currency || 'XOF'} pour le projet "${project.name}". Merci de m'envoyer le fichier !`
-  );
+function toggleBuyForm(id) {
+  const form = document.getElementById(`buy-form-${id}`);
+  if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
 }
 
-// Pas de lien de paiement configuré pour ce projet : on renvoie vers le contact plutôt que rien.
-function requestPurchaseContact(id) {
+function toggleProofMethod(id) {
+  const method = document.querySelector(`input[name="proof-method-${id}"]:checked`)?.value || 'transaction';
+  const transactionFields = document.getElementById(`buy-transaction-fields-${id}`);
+  const receiptFields = document.getElementById(`buy-receipt-fields-${id}`);
+  if (transactionFields) transactionFields.style.display = method === 'transaction' ? '' : 'none';
+  if (receiptFields) receiptFields.style.display = method === 'receipt' ? '' : 'none';
+}
+
+// La commande n'est créée qu'une fois la preuve de paiement fournie (numéro Wave + ID de
+// transaction, ou reçu PDF), pour donner à l'admin de quoi vérifier avant de livrer le fichier.
+async function submitOrder(id) {
   const project = (window.portfolioProjectsById || {})[id];
   if (!project) return;
-  hideProject();
-  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-  prefillContactForm(
-    `Achat du projet "${project.name}"`,
-    `Bonjour, je suis intéressé(e) par l'achat du projet "${project.name}" (${project.price} ${project.currency || 'XOF'}). Comment procéder ?`
-  );
+
+  const feedback = document.getElementById(`buy-feedback-${id}`);
+  const buyerName = document.getElementById(`buy-name-${id}`)?.value.trim() || '';
+  const buyerEmail = document.getElementById(`buy-email-${id}`)?.value.trim() || '';
+  const proofMethod = document.querySelector(`input[name="proof-method-${id}"]:checked`)?.value || 'transaction';
+
+  if (!buyerName || !buyerEmail) {
+    if (feedback) { feedback.textContent = 'Nom et email sont requis.'; feedback.style.color = '#ef4444'; }
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('projectId', id);
+  formData.append('buyerName', buyerName);
+  formData.append('buyerEmail', buyerEmail);
+  formData.append('proofMethod', proofMethod);
+
+  if (proofMethod === 'receipt') {
+    const file = document.getElementById(`buy-receipt-file-${id}`)?.files[0];
+    if (!file) {
+      if (feedback) { feedback.textContent = 'Merci de joindre le reçu PDF.'; feedback.style.color = '#ef4444'; }
+      return;
+    }
+    formData.append('receipt', file);
+  } else {
+    const waveNumber = document.getElementById(`buy-wave-number-${id}`)?.value.trim() || '';
+    const transactionId = document.getElementById(`buy-transaction-id-${id}`)?.value.trim() || '';
+    if (!waveNumber || !transactionId) {
+      if (feedback) { feedback.textContent = 'Numéro Wave et ID de transaction sont requis.'; feedback.style.color = '#ef4444'; }
+      return;
+    }
+    formData.append('waveNumber', waveNumber);
+    formData.append('transactionId', transactionId);
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/orders`, { method: 'POST', body: formData });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Erreur');
+
+    if (feedback) {
+      feedback.textContent = 'Merci ! Ta preuve a bien été envoyée, tu recevras ton lien de téléchargement après vérification.';
+      feedback.style.color = '#22c55e';
+    }
+  } catch (error) {
+    if (feedback) {
+      feedback.textContent = error.message || 'Échec de l\'envoi.';
+      feedback.style.color = '#ef4444';
+    }
+  }
 }
 
 function requestFreeFile(id) {
@@ -167,6 +214,13 @@ function safeHref(url) {
 function estimateReadingTime(content) {
   const words = String(content ?? '').trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
+}
+
+function getSuggestedArticles(current, articles, limit = 4) {
+  const others = articles.filter(a => a.id !== current.id);
+  const sameCategory = others.filter(a => a.category === current.category);
+  const rest = others.filter(a => a.category !== current.category);
+  return [...sameCategory, ...rest].slice(0, limit);
 }
 
 function buildSocialEntry(kind, rawValue) {
@@ -202,8 +256,23 @@ function renderInlineMarkdown(text) {
     .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
-function renderArticleContent(content) {
-  const lines = String(content ?? '').split('\n');
+function renderCodeBlock(lang, code) {
+  const language = String(lang ?? '').trim().toLowerCase();
+  const label = language || 'code';
+  const hljsClass = language ? ` language-${escapeHtml(language)}` : '';
+  return `<div class="article-code-terminal">
+    <div class="terminal-bar">
+      <div class="dot r"></div>
+      <div class="dot y"></div>
+      <div class="dot g"></div>
+      <div class="terminal-title">${escapeHtml(label)}</div>
+    </div>
+    <pre class="article-code-body"><code class="hljs${hljsClass}">${escapeHtml(code)}</code></pre>
+  </div>`;
+}
+
+function renderTextChunk(text) {
+  const lines = text.split('\n');
   const blocks = [];
   let paragraph = [];
 
@@ -229,9 +298,26 @@ function renderArticleContent(content) {
     }
   });
   flushParagraph();
-
-  if (!blocks.length) return '<p>Cet article n\'a pas encore de contenu.</p>';
   return blocks.join('');
+}
+
+function renderArticleContent(content) {
+  const text = String(content ?? '');
+  const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
+  const blocks = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    const [full, lang, code] = match;
+    blocks.push(renderTextChunk(text.slice(lastIndex, match.index)));
+    blocks.push(renderCodeBlock(lang, code.replace(/\n$/, '')));
+    lastIndex = match.index + full.length;
+  }
+  blocks.push(renderTextChunk(text.slice(lastIndex)));
+
+  const joined = blocks.join('');
+  return joined.trim() ? joined : '<p>Cet article n\'a pas encore de contenu.</p>';
 }
 
 function getLikedArticles() {
@@ -473,9 +559,27 @@ async function loadPortfolioData({ silent = false } = {}) {
               : `<a class="btn-hero-secondary project-cta" href="#contact" onclick="requestFreeFile('${project.id}')">⬇ Obtenir gratuitement</a>`;
           } else if (project.downloadType === 'paid') {
             const paymentHref = safeHref(project.paymentLink);
-            downloadCta = paymentHref
-              ? `<a class="btn-hero-secondary project-cta" href="${escapeHtml(paymentHref)}" target="_blank" rel="noopener" onclick="notifyPurchaseIntent('${project.id}')">💳 Acheter — ${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}</a>`
-              : `<a class="btn-hero-secondary project-cta" href="#contact" onclick="requestPurchaseContact('${project.id}')">💳 Acheter — ${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}</a>`;
+            const priceLabel = `${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}`;
+            const openPaymentJs = paymentHref ? `window.open('${escapeHtml(paymentHref)}','_blank','noopener');` : '';
+            downloadCta = `<button type="button" class="btn-hero-secondary project-cta" onclick="${openPaymentJs}toggleBuyForm('${project.id}')">💳 Acheter — ${priceLabel}</button>
+                <div class="buy-form" id="buy-form-${project.id}" style="display:none">
+                  <p class="buy-form-hint">Une fois le paiement effectué sur Wave, envoie ta preuve ci-dessous pour recevoir ton lien de téléchargement.</p>
+                  <input class="form-input" type="text" id="buy-name-${project.id}" placeholder="Ton nom">
+                  <input class="form-input" type="email" id="buy-email-${project.id}" placeholder="Ton email">
+                  <div class="buy-form-proof-toggle">
+                    <label><input type="radio" name="proof-method-${project.id}" value="transaction" checked onchange="toggleProofMethod('${project.id}')"> Numéro Wave + ID transaction</label>
+                    <label><input type="radio" name="proof-method-${project.id}" value="receipt" onchange="toggleProofMethod('${project.id}')"> Reçu PDF</label>
+                  </div>
+                  <div id="buy-transaction-fields-${project.id}">
+                    <input class="form-input" type="text" id="buy-wave-number-${project.id}" placeholder="Numéro Wave utilisé pour payer">
+                    <input class="form-input" type="text" id="buy-transaction-id-${project.id}" placeholder="ID de transaction Wave">
+                  </div>
+                  <div id="buy-receipt-fields-${project.id}" style="display:none">
+                    <input class="form-input" type="file" accept=".pdf,application/pdf" id="buy-receipt-file-${project.id}">
+                  </div>
+                  <button type="button" class="btn-hero-primary" onclick="submitOrder('${project.id}')">Envoyer ma preuve de paiement</button>
+                  <p class="buy-form-feedback" id="buy-feedback-${project.id}"></p>
+                </div>`;
           }
 
           const view = document.createElement('div');
@@ -508,9 +612,9 @@ async function loadPortfolioData({ silent = false } = {}) {
     if (blogList && articleViews) {
       blogList.innerHTML = '';
       articleViews.innerHTML = '';
-      data.articles
-        .filter(article => article.published)
-        .forEach(article => {
+      const publishedArticles = data.articles.filter(article => article.published);
+
+      publishedArticles.forEach(article => {
           const readTime = estimateReadingTime(article.content);
 
           const post = document.createElement('div');
@@ -529,43 +633,63 @@ async function loadPortfolioData({ silent = false } = {}) {
           blogList.appendChild(post);
 
           const liked = getLikedArticles().includes(article.id);
+          const suggestions = getSuggestedArticles(article, publishedArticles);
 
           const view = document.createElement('div');
           view.className = 'article-view';
           view.id = 'article-' + article.id;
           view.innerHTML = `
-            <div class="article-back" onclick="hideArticle()">← Retour aux articles</div>
-            <h1 class="article-h1">${escapeHtml(article.title)}</h1>
-            <div class="article-meta">
-              <span>${escapeHtml(article.date)}</span>
-              <span>${readTime} min de lecture</span>
-              <span>${escapeHtml(article.category)}</span>
-            </div>
-            <div class="article-body">${renderArticleContent(article.content)}</div>
-            <div class="article-actions-bar">
-              <button class="article-like-btn${liked ? ' liked' : ''}" id="like-btn-${article.id}" onclick="toggleLike('${article.id}')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                <span id="like-count-${article.id}">${article.likes || 0}</span>
-              </button>
-              <button class="article-share-btn" id="share-btn-${article.id}" onclick="shareArticle('${article.id}')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Partager
-                <span id="share-count-${article.id}">${article.shares || 0}</span>
-              </button>
-              <span class="share-feedback" id="share-feedback-${article.id}"></span>
-            </div>
-            <div class="article-comments">
-              <h3 class="comments-title">Commentaires</h3>
-              <div class="comments-list" id="comments-list-${article.id}"><p class="comments-empty">Chargement...</p></div>
-              <form class="comment-form" onsubmit="return submitComment(event, '${article.id}')">
-                <input class="form-input" type="text" id="comment-name-${article.id}" placeholder="Ton nom" required>
-                <textarea class="form-input" id="comment-message-${article.id}" rows="3" placeholder="Ton commentaire..." required></textarea>
-                <button class="comment-submit" type="submit">Envoyer</button>
-                <p class="comment-feedback" id="comment-feedback-${article.id}"></p>
-              </form>
+            <div class="article-view-layout">
+              <div class="article-main">
+                <div class="article-back" onclick="hideArticle()">← Retour aux articles</div>
+                <h1 class="article-h1">${escapeHtml(article.title)}</h1>
+                <div class="article-meta">
+                  <span>${escapeHtml(article.date)}</span>
+                  <span>${readTime} min de lecture</span>
+                  <span>${escapeHtml(article.category)}</span>
+                </div>
+                <div class="article-body">${renderArticleContent(article.content)}</div>
+                <div class="article-actions-bar">
+                  <button class="article-like-btn${liked ? ' liked' : ''}" id="like-btn-${article.id}" onclick="toggleLike('${article.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    <span id="like-count-${article.id}">${article.likes || 0}</span>
+                  </button>
+                  <button class="article-share-btn" id="share-btn-${article.id}" onclick="shareArticle('${article.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    Partager
+                    <span id="share-count-${article.id}">${article.shares || 0}</span>
+                  </button>
+                  <span class="share-feedback" id="share-feedback-${article.id}"></span>
+                </div>
+                <div class="article-comments">
+                  <h3 class="comments-title">Commentaires</h3>
+                  <div class="comments-list" id="comments-list-${article.id}"><p class="comments-empty">Chargement...</p></div>
+                  <form class="comment-form" onsubmit="return submitComment(event, '${article.id}')">
+                    <input class="form-input" type="text" id="comment-name-${article.id}" placeholder="Ton nom" required>
+                    <textarea class="form-input" id="comment-message-${article.id}" rows="3" placeholder="Ton commentaire..." required></textarea>
+                    <button class="comment-submit" type="submit">Envoyer</button>
+                    <p class="comment-feedback" id="comment-feedback-${article.id}"></p>
+                  </form>
+                </div>
+              </div>
+              ${suggestions.length ? `
+              <aside class="article-suggestions">
+                <div class="article-suggestions-title">À lire aussi</div>
+                <div class="suggestion-list">
+                  ${suggestions.map(s => `
+                    <div class="suggestion-card" onclick="showArticle('${s.id}')">
+                      <div class="suggestion-cat">${escapeHtml(s.category)}</div>
+                      <div class="suggestion-title">${escapeHtml(s.title)}</div>
+                      <div class="suggestion-date">${escapeHtml(s.date)}</div>
+                    </div>`).join('')}
+                </div>
+              </aside>` : ''}
             </div>`;
           articleViews.appendChild(view);
         });
+      if (window.hljs) {
+        articleViews.querySelectorAll('pre code').forEach(block => window.hljs.highlightElement(block));
+      }
       openArticleFromHash();
     }
   } catch (error) {
@@ -627,7 +751,33 @@ async function handleSubmit(btn) {
   }
 }
 
-window.addEventListener('DOMContentLoaded', loadPortfolioData);
+function initCodeSnow() {
+  const container = document.getElementById('codeSnow');
+  if (!container) return;
+
+  const icons = [
+    'fa-html5', 'fa-css3-alt', 'fa-js', 'fa-react', 'fa-node-js',
+    'fa-python', 'fa-php', 'fa-docker', 'fa-git-alt', 'fa-npm', 'fa-sass', 'fa-vuejs'
+  ];
+  const count = 55;
+
+  for (let i = 0; i < count; i++) {
+    const icon = icons[Math.floor(Math.random() * icons.length)];
+    const el = document.createElement('i');
+    el.className = `fa-brands ${icon} code-snow-icon`;
+    el.style.left = `${Math.random() * 100}%`;
+    el.style.fontSize = `${12 + Math.random() * 16}px`;
+    el.style.opacity = (0.08 + Math.random() * 0.22).toFixed(2);
+    el.style.animationDuration = `${14 + Math.random() * 16}s`;
+    el.style.animationDelay = `-${(Math.random() * 30).toFixed(1)}s`;
+    container.appendChild(el);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadPortfolioData();
+  initCodeSnow();
+});
 
 // Repère si le visiteur est en train de saisir un formulaire (contact, commentaire) ou de lire
 // un article/projet, pour ne jamais lui couper sa lecture ou effacer sa saisie en arrière-plan.

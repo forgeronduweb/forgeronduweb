@@ -4,11 +4,13 @@ const TOKEN_KEY = 'adminToken';
 const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
 const DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
 const APPROVE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>';
+const REPLY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>';
 
 let portfolio = { profile: {}, projects: [], articles: [] };
 let comments = [];
 let messages = [];
 let orders = [];
+let subscribers = [];
 let settings = {};
 let avatarUrlDirty = false;
 let editingProjectId = null;
@@ -17,9 +19,8 @@ let newProjectDownloadFile = null;
 let editingArticleId = null;
 let deleteContext = null;
 let articleFilter = 'all';
-let commentFilter = 'all';
-let messageFilter = 'all';
 let orderFilter = 'all';
+let messageFilter = 'all';
 let lastSyncAt = null;
 
 function escapeHtml(str) {
@@ -260,6 +261,10 @@ async function init({ silent = false } = {}) {
     const ordersBody = await ordersRes.json();
     orders = ordersBody.orders || [];
 
+    const subscribersRes = await apiFetch('/admin/subscribers');
+    const subscribersBody = await subscribersRes.json();
+    subscribers = subscribersBody.subscribers || [];
+
     const settingsRes = await apiFetch('/admin/settings');
     const settingsBody = await settingsRes.json();
     settings = settingsBody.settings || {};
@@ -270,8 +275,8 @@ async function init({ silent = false } = {}) {
     renderProjects();
     renderArticles();
     renderProfileForm();
-    renderComments();
     renderMessages();
+    renderAbonnes();
     renderOrders();
     renderSettingsForm();
     return true;
@@ -304,17 +309,30 @@ function renderDashboardStats() {
   document.getElementById('stat-projects-sub').textContent = `${live} live · ${totalProjects - live} en cours`;
   document.getElementById('badge-projects').textContent = totalProjects;
 
-  const pendingComments = comments.filter(c => !c.approved).length;
-  const badgeComments = document.getElementById('badge-comments');
-  if (badgeComments) badgeComments.textContent = pendingComments;
-
   const unreadMessages = messages.filter(m => !m.read).length;
   const badgeMessages = document.getElementById('badge-messages');
   if (badgeMessages) badgeMessages.textContent = unreadMessages;
 
+  const badgeAbonnes = document.getElementById('badge-abonnes');
+  if (badgeAbonnes) badgeAbonnes.textContent = subscribers.length;
+
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
   const badgeOrders = document.getElementById('badge-orders');
   if (badgeOrders) badgeOrders.textContent = pendingOrders;
+
+  const paidOrders = orders.filter(o => o.status === 'paid');
+  const revenue = paidOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+  const revenueCurrency = paidOrders[0]?.currency || 'XOF';
+  const statRevenue = document.getElementById('stat-revenue');
+  if (statRevenue) statRevenue.textContent = `${revenue.toLocaleString('fr-FR')} ${revenueCurrency}`;
+  const statRevenueSub = document.getElementById('stat-revenue-sub');
+  if (statRevenueSub) statRevenueSub.textContent = `${paidOrders.length} vente${paidOrders.length > 1 ? 's' : ''} confirmée${paidOrders.length > 1 ? 's' : ''}`;
+
+  const distinctSubscribers = new Set(subscribers.map(s => s.email.toLowerCase())).size;
+  const statSubscribers = document.getElementById('stat-subscribers');
+  if (statSubscribers) statSubscribers.textContent = distinctSubscribers;
+  const statSubscribersSub = document.getElementById('stat-subscribers-sub');
+  if (statSubscribersSub) statSubscribersSub.textContent = 'emails collectés (templates)';
 
   renderSiteStatus();
   renderRecentActivity();
@@ -510,52 +528,44 @@ function renderArticles() {
       <div class="article-stats">
         <span>❤ ${article.likes || 0}</span>
         <span>↗ ${article.shares || 0}</span>
-        <span>💬 ${articleComments.length}${pendingCount ? ` (${pendingCount} en attente)` : ''}</span>
-      </div>`;
+        <span class="article-comments-toggle" style="cursor:pointer;text-decoration:underline dotted">💬 ${articleComments.length}${pendingCount ? ` (${pendingCount} en attente)` : ''}</span>
+      </div>
+      <div class="article-comments-panel" id="article-comments-${article.id}" style="display:none;flex-direction:column;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"></div>`;
     card.querySelector('.edit-btn').addEventListener('click', () => openEditArticle(article.id));
     card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete(article.title, 'articles', article.id));
+    card.querySelector('.article-comments-toggle').addEventListener('click', () => toggleArticleComments(article.id));
     container.appendChild(card);
   });
 }
 
-// ═══════════════ COMMENTAIRES ═══════════════
+// ═══════════════ COMMENTAIRES (gérés par article) ═══════════════
 
-function setCommentFilter(filter, btn) {
-  commentFilter = filter;
-  filterToggle(btn);
-  renderComments();
+function toggleArticleComments(articleId) {
+  const panel = document.getElementById(`article-comments-${articleId}`);
+  if (!panel) return;
+  const isHidden = panel.style.display === 'none' || !panel.style.display;
+  panel.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) renderArticleComments(articleId);
 }
 
-function renderComments() {
-  const container = document.getElementById('comments-list');
-  if (!container) return;
+function renderArticleComments(articleId) {
+  const panel = document.getElementById(`article-comments-${articleId}`);
+  if (!panel) return;
+  const articleComments = commentsForArticle(articleId);
 
-  const total = comments.length;
-  const pending = comments.filter(c => !c.approved).length;
-  document.getElementById('comment-count-all').textContent = total;
-  document.getElementById('comment-count-pending').textContent = pending;
-  document.getElementById('comment-count-approved').textContent = total - pending;
-
-  const visible = comments.filter(c => {
-    if (commentFilter === 'pending') return !c.approved;
-    if (commentFilter === 'approved') return c.approved;
-    return true;
-  });
-
-  container.innerHTML = '';
-  if (!visible.length) {
-    container.innerHTML = '<p style="font-size:12px;color:var(--muted)">Aucun commentaire.</p>';
+  panel.innerHTML = '';
+  if (!articleComments.length) {
+    panel.innerHTML = '<p style="font-size:12px;color:var(--muted)">Aucun commentaire.</p>';
     return;
   }
 
-  visible.forEach(comment => {
-    const card = document.createElement('div');
-    card.className = 'article-card';
-    card.innerHTML = `
-      <div class="article-card-top">
+  articleComments.forEach(comment => {
+    const item = document.createElement('div');
+    item.className = 'article-comment-item';
+    item.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="comment-author">${escapeHtml(comment.name)}</span>
-          <span class="comment-article-ref">sur « ${escapeHtml(comment.articleTitle)} »</span>
           <span class="badge ${comment.approved ? 'badge-green' : 'badge-orange'}">${comment.approved ? 'Approuvé' : 'En attente'}</span>
         </div>
         <div class="article-actions">
@@ -566,10 +576,10 @@ function renderComments() {
       <div class="comment-message">${escapeHtml(comment.message)}</div>
       <div class="article-meta"><span>${new Date(comment.createdAt).toLocaleDateString('fr-FR')}</span></div>`;
     if (!comment.approved) {
-      card.querySelector('.approve-btn').addEventListener('click', () => approveComment(comment.id));
+      item.querySelector('.approve-btn').addEventListener('click', () => approveComment(comment.id));
     }
-    card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('ce commentaire', 'comments', comment.id));
-    container.appendChild(card);
+    item.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('ce commentaire', 'comments', comment.id));
+    panel.appendChild(item);
   });
 }
 
@@ -581,7 +591,7 @@ async function approveComment(id) {
 
     const comment = comments.find(c => c.id === id);
     if (comment) comment.approved = true;
-    renderComments();
+    if (comment) renderArticleComments(comment.articleId);
     renderArticles();
     renderDashboardStats();
     showToast('Commentaire approuvé', 'success');
@@ -589,6 +599,8 @@ async function approveComment(id) {
     showToast(error.message || 'Échec de l\'approbation', 'error');
   }
 }
+
+// ═══════════════ MES ABONNÉS (téléchargements + messages) ═══════════════
 
 // ═══════════════ MESSAGES ═══════════════
 
@@ -626,6 +638,7 @@ function renderMessages() {
           ${msg.read ? '' : '<span class="badge badge-orange">Non lu</span>'}
         </div>
         <div class="article-actions">
+          <a class="icon-btn" title="Répondre par email" href="mailto:${escapeHtml(msg.email)}?subject=${encodeURIComponent('Re: ' + msg.subject)}">${REPLY_ICON}</a>
           ${msg.read ? '' : `<div class="icon-btn read-btn" title="Marquer comme lu">${APPROVE_ICON}</div>`}
           <div class="icon-btn danger delete-btn" title="Supprimer">${DELETE_ICON}</div>
         </div>
@@ -656,7 +669,43 @@ async function markMessageRead(id) {
   }
 }
 
+// ═══════════════ MES ABONNÉS (téléchargements de templates) ═══════════════
+
+function renderAbonnes() {
+  const container = document.getElementById('abonnes-list');
+  if (!container) return;
+
+  const sorted = [...subscribers].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  container.innerHTML = '';
+  if (!sorted.length) {
+    container.innerHTML = '<tr><td colspan="5" style="color:var(--muted);font-size:12px">Aucun abonné pour le moment.</td></tr>';
+    return;
+  }
+
+  sorted.forEach(sub => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${escapeHtml(sub.name || '—')}</td>
+      <td class="td-mono">${escapeHtml(sub.email)}</td>
+      <td>« ${escapeHtml(sub.projectName)} »</td>
+      <td class="td-mono">${new Date(sub.createdAt).toLocaleDateString('fr-FR')}</td>
+      <td><div class="icon-btn danger delete-btn" title="Supprimer">${DELETE_ICON}</div></td>`;
+    row.querySelector('.delete-btn').addEventListener('click', () => confirmDelete(`l'abonné ${sub.email}`, 'subscribers', sub.id));
+    container.appendChild(row);
+  });
+}
+
 // ═══════════════ COMMANDES ═══════════════
+
+function setCommandesTab(tab, btn) {
+  filterToggle(btn);
+  const listEl = document.getElementById('commandes-tab-list');
+  const reportEl = document.getElementById('commandes-tab-report');
+  if (listEl) listEl.style.display = tab === 'list' ? '' : 'none';
+  if (reportEl) reportEl.style.display = tab === 'report' ? 'flex' : 'none';
+  if (tab === 'report') renderOrdersReport();
+}
 
 function setOrderFilter(filter, btn) {
   orderFilter = filter;
@@ -664,9 +713,226 @@ function setOrderFilter(filter, btn) {
   renderOrders();
 }
 
+function renderOrdersReport() {
+  const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+  const paidOrders = orders.filter(o => o.status === 'paid');
+  const pendingOrders = orders.filter(o => o.status === 'pending');
+  const currency = paidOrders[0]?.currency || pendingOrders[0]?.currency || 'XOF';
+
+  const revenue = paidOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+  const avgOrder = paidOrders.length ? Math.round(revenue / paidOrders.length) : 0;
+  const pendingValue = pendingOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+
+  setText('report-revenue', `${revenue.toLocaleString('fr-FR')} ${currency}`);
+  setText('report-revenue-sub', `${paidOrders.length} vente${paidOrders.length > 1 ? 's' : ''} confirmée${paidOrders.length > 1 ? 's' : ''}`);
+  setText('report-sales-count', paidOrders.length);
+  setText('report-sales-sub', `${pendingOrders.length} en attente de vérification`);
+  setText('report-avg-order', `${avgOrder.toLocaleString('fr-FR')} ${currency}`);
+  setText('report-pending-value', `${pendingValue.toLocaleString('fr-FR')} ${currency}`);
+  setText('report-pending-sub', `${pendingOrders.length} commande${pendingOrders.length > 1 ? 's' : ''} à vérifier`);
+
+  const byProject = new Map();
+  paidOrders.forEach(o => {
+    const entry = byProject.get(o.projectName) || { revenue: 0, count: 0, currency: o.currency };
+    entry.revenue += o.price || 0;
+    entry.count += 1;
+    byProject.set(o.projectName, entry);
+  });
+
+  const byProjectRows = [...byProject.entries()].sort((a, b) => b[1].revenue - a[1].revenue);
+  renderRevenueByTemplateChart(byProjectRows, currency);
+  renderRevenueTimeChart(paidOrders, currency);
+}
+
+// ─── Graphiques (Chart.js) ───
+// Une seule teinte (bleu) pour les deux graphiques : chacun trace UNE série
+// (le revenu), ventilée par catégorie nominale (template) ou par date — la
+// couleur ne doit pas ré-encoder une information déjà portée par la position
+// (voir la règle "un value-ramp sur des catégories nominales" à éviter).
+const CHART_BLUE = '#3b82f6';
+const CHART_BLUE_WASH = 'rgba(59,130,246,0.1)';
+const CHART_GRID = 'rgba(255,255,255,0.06)';
+const CHART_MUTED = '#808080';
+const CHART_TEXT = '#ebebeb';
+const CHART_SURFACE = '#141414';
+
+let revenueTemplateChart = null;
+let revenueTimeChart = null;
+
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = "'Geist', sans-serif";
+  Chart.defaults.color = CHART_MUTED;
+}
+
+function formatCompactAmount(value, currency) {
+  return `${Number(value).toLocaleString('fr-FR')} ${currency}`;
+}
+
+function renderRevenueByTemplateChart(rows, currency) {
+  const canvas = document.getElementById('chart-revenue-template');
+  const empty = document.getElementById('report-template-empty');
+  const wrap = document.getElementById('report-template-chart-wrap');
+  if (!canvas) return;
+
+  if (!rows.length) {
+    if (empty) empty.style.display = 'block';
+    if (wrap) wrap.style.display = 'none';
+    if (revenueTemplateChart) { revenueTemplateChart.destroy(); revenueTemplateChart = null; }
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  if (wrap) { wrap.style.display = ''; wrap.style.height = `${Math.max(120, rows.length * 46)}px`; }
+
+  const labels = rows.map(([name]) => name);
+  const values = rows.map(([, entry]) => entry.revenue);
+  const counts = rows.map(([, entry]) => entry.count);
+
+  if (revenueTemplateChart) revenueTemplateChart.destroy();
+  revenueTemplateChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: CHART_BLUE,
+        borderRadius: 4,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: CHART_SURFACE,
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: CHART_MUTED,
+          bodyColor: CHART_TEXT,
+          displayColors: false,
+          padding: 10,
+          callbacks: {
+            label: (ctx) => {
+              const count = counts[ctx.dataIndex];
+              return [`${formatCompactAmount(ctx.parsed.x, currency)}`, `${count} vente${count > 1 ? 's' : ''}`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: CHART_GRID, drawTicks: false },
+          border: { display: false },
+          ticks: { callback: (v) => v.toLocaleString('fr-FR') }
+        },
+        y: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: CHART_TEXT }
+        }
+      }
+    }
+  });
+}
+
+function renderRevenueTimeChart(paidOrders, currency) {
+  const canvas = document.getElementById('chart-revenue-time');
+  const empty = document.getElementById('report-time-empty');
+  const rangeLabel = document.getElementById('report-time-range');
+  if (!canvas) return;
+
+  if (!paidOrders.length) {
+    if (empty) empty.style.display = 'block';
+    canvas.style.display = 'none';
+    if (rangeLabel) rangeLabel.textContent = '—';
+    if (revenueTimeChart) { revenueTimeChart.destroy(); revenueTimeChart = null; }
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  canvas.style.display = '';
+
+  const byDay = new Map();
+  paidOrders.forEach(o => {
+    const day = new Date(o.paidAt || o.createdAt).toISOString().slice(0, 10);
+    byDay.set(day, (byDay.get(day) || 0) + (o.price || 0));
+  });
+
+  const days = [...byDay.keys()].sort();
+  let running = 0;
+  const values = days.map(day => {
+    running += byDay.get(day);
+    return running;
+  });
+  const labels = days.map(day => new Date(day).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+  const fullDates = days.map(day => new Date(day).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }));
+
+  if (rangeLabel) {
+    rangeLabel.textContent = days.length > 1 ? `${labels[0]} → ${labels[labels.length - 1]}` : labels[0];
+  }
+
+  if (revenueTimeChart) revenueTimeChart.destroy();
+  revenueTimeChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: CHART_BLUE,
+        backgroundColor: CHART_BLUE_WASH,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: CHART_BLUE,
+        pointBorderColor: CHART_SURFACE,
+        pointBorderWidth: 2,
+        fill: true,
+        tension: 0.25
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: CHART_SURFACE,
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: CHART_MUTED,
+          bodyColor: CHART_TEXT,
+          displayColors: false,
+          padding: 10,
+          callbacks: {
+            title: (items) => fullDates[items[0].dataIndex],
+            label: (ctx) => `Cumulé : ${formatCompactAmount(ctx.parsed.y, currency)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: CHART_MUTED, autoSkip: true, maxRotation: 0 }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: CHART_GRID, drawTicks: false },
+          border: { display: false },
+          ticks: { callback: (v) => v.toLocaleString('fr-FR') }
+        }
+      }
+    }
+  });
+}
+
 function renderOrders() {
   const container = document.getElementById('orders-list');
   if (!container) return;
+
+  renderOrdersReport();
 
   const total = orders.length;
   const pending = orders.filter(o => o.status === 'pending').length;
@@ -714,6 +980,7 @@ function renderOrders() {
         <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
           <input class="form-input mono" style="font-size:11px" readonly value="${escapeHtml(downloadLink)}">
           <button class="btn btn-ghost copy-link-btn" style="font-size:12px;flex-shrink:0">Copier</button>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0">${order.downloadCount || 0}/${order.maxDownloads || 2} utilisés</span>
         </div>` : ''}
       <div class="article-meta"><span>Commandé le ${new Date(order.createdAt).toLocaleDateString('fr-FR')}</span>${order.paidAt ? `<span>Payé le ${new Date(order.paidAt).toLocaleDateString('fr-FR')}</span>` : ''}</div>`;
     if (order.status === 'pending') {
@@ -1316,11 +1583,12 @@ async function performDelete() {
     if (type === 'articles') portfolio.articles = portfolio.articles.filter(a => a.id !== id);
     if (type === 'comments') comments = comments.filter(c => c.id !== id);
     if (type === 'messages') messages = messages.filter(m => m.id !== id);
+    if (type === 'subscribers') subscribers = subscribers.filter(s => s.id !== id);
     if (type === 'orders') orders = orders.filter(o => o.id !== id);
     renderProjects();
     renderArticles();
-    renderComments();
     renderMessages();
+    renderAbonnes();
     renderOrders();
     renderDashboardStats();
     showToast('Supprimé', 'info');

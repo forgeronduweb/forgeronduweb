@@ -119,6 +119,53 @@ function toggleBuyForm(id) {
   if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
 }
 
+function toggleFreeForm(id) {
+  const form = document.getElementById(`free-form-${id}`);
+  if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+}
+
+// Le fichier gratuit n'est jamais exposé publiquement (voir /api/portfolio) : on ne récupère
+// le vrai lien qu'après avoir enregistré l'email, pour se constituer une base d'utilisateurs.
+async function submitFreeDownload(id) {
+  const project = (window.portfolioProjectsById || {})[id];
+  if (!project) return;
+
+  const feedback = document.getElementById(`free-feedback-${id}`);
+  const name = document.getElementById(`free-name-${id}`)?.value.trim() || '';
+  const email = document.getElementById(`free-email-${id}`)?.value.trim() || '';
+
+  if (!email) {
+    if (feedback) { feedback.textContent = 'Email requis.'; feedback.style.color = '#ef4444'; }
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/subscribers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId: id, email, name })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Erreur');
+
+    if (feedback) {
+      feedback.textContent = 'Merci ! Ton téléchargement démarre...';
+      feedback.style.color = '#22c55e';
+    }
+    const link = document.createElement('a');
+    link.href = result.downloadUrl;
+    link.download = result.downloadFileName || project.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    if (feedback) {
+      feedback.textContent = error.message || 'Échec de l\'envoi.';
+      feedback.style.color = '#ef4444';
+    }
+  }
+}
+
 function toggleProofMethod(id) {
   const method = document.querySelector(`input[name="proof-method-${id}"]:checked`)?.value || 'transaction';
   const transactionFields = document.getElementById(`buy-transaction-fields-${id}`);
@@ -361,22 +408,38 @@ async function shareArticle(id) {
   const countEl = document.getElementById('share-count-' + id);
   const feedback = document.getElementById('share-feedback-' + id);
 
-  try {
-    if (navigator.share) {
+  // navigator.share() ouvre la fenêtre de partage native de l'OS et ne se résout que si
+  // l'utilisateur choisit effectivement une app pour partager (il rejette si annulé) — c'est
+  // le signal le plus fiable qu'on puisse obtenir côté navigateur, donc on ne compte QUE ce cas.
+  // La copie presse-papier (fallback desktop) n'est pas comptée : copier un lien ne veut pas
+  // dire qu'il a été partagé quelque part.
+  if (navigator.share) {
+    try {
       await navigator.share({ url });
-    } else if (navigator.clipboard) {
+    } catch (error) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/articles/${id}/share`, { method: 'POST' });
+      const result = await response.json();
+      if (response.ok && countEl) countEl.textContent = result.shares;
+    } catch (error) {
+      console.error('Erreur partage', error);
+    }
+    return;
+  }
+
+  if (navigator.clipboard) {
+    try {
       await navigator.clipboard.writeText(url);
       if (feedback) {
         feedback.textContent = 'Lien copié !';
         setTimeout(() => { feedback.textContent = ''; }, 2500);
       }
+    } catch (error) {
+      console.error('Erreur copie du lien', error);
     }
-
-    const response = await fetch(`${API_BASE}/articles/${id}/share`, { method: 'POST' });
-    const result = await response.json();
-    if (response.ok && countEl) countEl.textContent = result.shares;
-  } catch (error) {
-    console.error('Erreur partage', error);
   }
 }
 
@@ -554,8 +617,15 @@ async function loadPortfolioData({ silent = false } = {}) {
         if (projectViews) {
           let downloadCta = '';
           if (project.downloadType === 'free') {
-            downloadCta = project.downloadFileUrl
-              ? `<a class="btn-hero-secondary project-cta" href="${escapeHtml(project.downloadFileUrl)}" download="${escapeHtml(project.downloadFileName || project.name)}">⬇ Télécharger gratuitement</a>`
+            downloadCta = project.downloadFileName
+              ? `<button type="button" class="btn-hero-secondary project-cta" onclick="toggleFreeForm('${project.id}')">⬇ Obtenir gratuitement</button>
+                <div class="buy-form" id="free-form-${project.id}" style="display:none">
+                  <p class="buy-form-hint">Laisse ton email pour recevoir le lien de téléchargement.</p>
+                  <input class="form-input" type="text" id="free-name-${project.id}" placeholder="Ton nom">
+                  <input class="form-input" type="email" id="free-email-${project.id}" placeholder="Ton email">
+                  <button type="button" class="btn-hero-primary" onclick="submitFreeDownload('${project.id}')">Recevoir le lien de téléchargement</button>
+                  <p class="buy-form-feedback" id="free-feedback-${project.id}"></p>
+                </div>`
               : `<a class="btn-hero-secondary project-cta" href="#contact" onclick="requestFreeFile('${project.id}')">⬇ Obtenir gratuitement</a>`;
           } else if (project.downloadType === 'paid') {
             const paymentHref = safeHref(project.paymentLink);

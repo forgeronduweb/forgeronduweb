@@ -6,6 +6,7 @@ const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
 const Order = require('../models/Order');
+const Subscriber = require('../models/Subscriber');
 const Settings = require('../models/Settings');
 const { resetToSeed } = require('../data/seed');
 const { signToken, requireAdmin, safeCompare } = require('../middleware/auth');
@@ -355,6 +356,17 @@ router.put('/orders/:id/mark-paid', async (req, res) => {
 router.delete('/orders/:id', async (req, res) => {
   const order = await Order.findByIdAndDelete(req.params.id);
   if (!order) return res.status(404).json({ ok: false, message: 'Commande introuvable' });
+  res.json({ ok: true });
+});
+
+router.get('/subscribers', async (_req, res) => {
+  const subscribers = await Subscriber.find().sort({ createdAt: -1 });
+  res.json({ ok: true, subscribers });
+});
+
+router.delete('/subscribers/:id', async (req, res) => {
+  const subscriber = await Subscriber.findByIdAndDelete(req.params.id);
+  if (!subscriber) return res.status(404).json({ ok: false, message: 'Abonné introuvable' });
   res.json({ ok: true });
 });
 

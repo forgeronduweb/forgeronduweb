@@ -6,6 +6,7 @@ const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
 const Order = require('../models/Order');
+const Subscriber = require('../models/Subscriber');
 const Settings = require('../models/Settings');
 const { publicWriteLimiter } = require('../middleware/rateLimit');
 
@@ -45,13 +46,14 @@ router.get('/portfolio', async (_req, res) => {
     Settings.findOne()
   ]);
 
-  // Le fichier d'un projet payant ne doit jamais être exposé publiquement avant
-  // qu'une commande ne soit confirmée payée — voir GET /orders/:token/download.
+  // Le contenu d'un fichier téléchargeable (gratuit ou payant) ne doit jamais être exposé
+  // publiquement avant que la commande ne soit payée (voir GET /orders/:token/download) ou
+  // que l'email de l'acheteur n'ait été collecté (voir POST /subscribers). Le nom du fichier
+  // reste visible : c'est une simple métadonnée, pas une donnée sensible.
   const safeProjects = projects.map(project => {
     const json = project.toJSON();
-    if (json.downloadType === 'paid') {
+    if (json.downloadType !== 'none') {
       json.downloadFileUrl = '';
-      json.downloadFileName = '';
     }
     return json;
   });
@@ -97,9 +99,31 @@ router.post('/orders', publicWriteLimiter, handleReceiptUpload, async (req, res)
   res.status(201).json({ ok: true, order });
 });
 
-router.get('/orders/:token/download', async (req, res) => {
+router.post('/subscribers', publicWriteLimiter, async (req, res) => {
+  const { projectId, email, name } = req.body || {};
+  if (!projectId || !email) {
+    return res.status(400).json({ ok: false, message: 'Projet et email sont requis' });
+  }
+
+  const project = await Project.findOne({ id: projectId });
+  if (!project || project.downloadType !== 'free' || !project.downloadFileUrl) {
+    return res.status(404).json({ ok: false, message: 'Fichier gratuit introuvable pour ce projet' });
+  }
+
+  await Subscriber.create({ email, name: name || '', projectId: project.id, projectName: project.name });
+  res.status(201).json({ ok: true, downloadUrl: project.downloadFileUrl, downloadFileName: project.downloadFileName });
+});
+
+router.get('/orders/:token/download', publicWriteLimiter, async (req, res) => {
+  // Le token est un secret aléatoire de 192 bits (voir Order.generateDownloadToken) : il ne peut
+  // pas être deviné ni brute-forcé. La seule protection supplémentaire nécessaire est de limiter
+  // le nombre de fois où un lien valide peut être utilisé, ci-dessous via downloadCount/maxDownloads.
   const order = await Order.findOne({ downloadToken: req.params.token, status: 'paid' });
   if (!order) return res.status(404).json({ ok: false, message: 'Lien invalide ou expiré' });
+
+  if (order.downloadCount >= order.maxDownloads) {
+    return res.status(403).json({ ok: false, message: 'Ce lien a atteint son nombre maximum de téléchargements' });
+  }
 
   const project = await Project.findOne({ id: order.projectId });
   if (!project || !project.downloadFileUrl) {
@@ -108,6 +132,9 @@ router.get('/orders/:token/download', async (req, res) => {
 
   const match = /^data:([^;]+);base64,(.+)$/.exec(project.downloadFileUrl);
   if (!match) return res.status(404).json({ ok: false, message: 'Fichier introuvable' });
+
+  order.downloadCount += 1;
+  await order.save();
 
   const [, mimetype, base64Data] = match;
   res.set('Content-Type', mimetype);

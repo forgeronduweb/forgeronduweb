@@ -24,6 +24,8 @@ const orderSchema = new mongoose.Schema(
     receiptFileName: { type: String, default: '' },
     status: { type: String, enum: ['pending', 'paid'], default: 'pending' },
     downloadToken: { type: String, default: '' },
+    downloadCount: { type: Number, default: 0 },
+    maxDownloads: { type: Number, default: 2 },
     paidAt: { type: Date, default: null }
   },
   { timestamps: true, toJSON: { transform: stripInternalFields }, toObject: { transform: stripInternalFields } }

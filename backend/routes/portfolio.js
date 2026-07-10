@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const multer = require('multer');
 const Profile = require('../models/Profile');
 const Project = require('../models/Project');
@@ -38,11 +39,11 @@ router.get('/health', (_req, res) => {
   res.json({ ok: true, message: 'Backend connecté' });
 });
 
-router.get('/portfolio', async (_req, res) => {
+router.get('/portfolio', async (req, res) => {
   const [profile, projects, articles, settings] = await Promise.all([
     Profile.findOne(),
     Project.find(),
-    Article.find(),
+    Article.find({ published: true }),
     Settings.findOne()
   ]);
 
@@ -58,12 +59,22 @@ router.get('/portfolio', async (_req, res) => {
     return json;
   });
 
-  res.json({ profile, projects: safeProjects, articles, settings });
+  // Cette réponse embarque les images (avatar, projets) en base64 et peut donc peser plusieurs
+  // centaines de Ko. Un ETag évite de retransmettre tout ce poids à chaque visite tant que rien
+  // n'a changé côté admin : le navigateur reçoit un 304 (quelques octets) au lieu du JSON complet.
+  const body = JSON.stringify({ profile, projects: safeProjects, articles, settings });
+  const etag = `"${crypto.createHash('sha1').update(body).digest('hex')}"`;
+  res.set('Cache-Control', 'no-cache');
+  res.set('ETag', etag);
+  if (req.headers['if-none-match'] === etag) {
+    return res.status(304).end();
+  }
+  res.type('application/json').send(body);
 });
 
 router.post('/orders', publicWriteLimiter, handleReceiptUpload, async (req, res) => {
   const { projectId, buyerName, buyerEmail, buyerPhone, proofMethod, waveNumber, transactionId } = req.body || {};
-  if (!projectId || !buyerName || !buyerEmail) {
+  if (typeof projectId !== 'string' || !projectId || !buyerName || !buyerEmail) {
     return res.status(400).json({ ok: false, message: 'Projet, nom et email sont requis' });
   }
 
@@ -101,7 +112,7 @@ router.post('/orders', publicWriteLimiter, handleReceiptUpload, async (req, res)
 
 router.post('/subscribers', publicWriteLimiter, async (req, res) => {
   const { projectId, email, name } = req.body || {};
-  if (!projectId || !email) {
+  if (typeof projectId !== 'string' || !projectId || !email) {
     return res.status(400).json({ ok: false, message: 'Projet et email sont requis' });
   }
 

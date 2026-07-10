@@ -22,7 +22,16 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 
-const staticOptions = { setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') };
+// index.html doit toujours être revalidé (point d'entrée de l'app) ; les autres fichiers
+// statiques (CSS/JS/images) peuvent être mis en cache brièvement par le navigateur pour
+// éviter de retélécharger les mêmes assets à chaque navigation, tout en restant à jour
+// rapidement après un déploiement (pas de hash de version dans les noms de fichiers).
+const staticOptions = {
+  setHeaders: (res, filePath) => {
+    const cacheControl = filePath.endsWith('.html') ? 'no-cache' : 'public, max-age=300, must-revalidate';
+    res.setHeader('Cache-Control', cacheControl);
+  }
+};
 app.use(express.static(path.join(__dirname, '..', 'frontend'), staticOptions));
 app.use('/admin', express.static(path.join(__dirname, '..', 'admin'), staticOptions));
 

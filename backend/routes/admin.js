@@ -8,6 +8,7 @@ const Message = require('../models/Message');
 const Order = require('../models/Order');
 const Quote = require('../models/Quote');
 const Subscriber = require('../models/Subscriber');
+const Visit = require('../models/Visit');
 const Settings = require('../models/Settings');
 const { resetToSeed } = require('../data/seed');
 const { signToken, requireAdmin, safeCompare } = require('../middleware/auth');
@@ -374,6 +375,12 @@ router.put('/orders/:id/mark-paid', async (req, res) => {
   res.json({ ok: true, order });
 });
 
+router.put('/orders/:id/read', async (req, res) => {
+  const order = await Order.findByIdAndUpdate(req.params.id, { read: true }, { returnDocument: 'after' });
+  if (!order) return res.status(404).json({ ok: false, message: 'Commande introuvable' });
+  res.json({ ok: true, order });
+});
+
 router.delete('/orders/:id', async (req, res) => {
   const order = await Order.findByIdAndDelete(req.params.id);
   if (!order) return res.status(404).json({ ok: false, message: 'Commande introuvable' });
@@ -385,10 +392,71 @@ router.get('/subscribers', async (_req, res) => {
   res.json({ ok: true, subscribers });
 });
 
+router.put('/subscribers/read-all', async (_req, res) => {
+  await Subscriber.updateMany({ read: false }, { read: true });
+  res.json({ ok: true });
+});
+
 router.delete('/subscribers/:id', async (req, res) => {
   const subscriber = await Subscriber.findByIdAndDelete(req.params.id);
   if (!subscriber) return res.status(404).json({ ok: false, message: 'Abonné introuvable' });
   res.json({ ok: true });
+});
+
+router.get('/visits/summary', async (req, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 90);
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const [result] = await Visit.aggregate([
+    { $match: { createdAt: { $gte: since } } },
+    {
+      $facet: {
+        totals: [
+          { $group: { _id: null, totalVisits: { $sum: 1 }, uniqueVisitors: { $addToSet: '$visitorHash' } } },
+          { $project: { _id: 0, totalVisits: 1, uniqueVisitors: { $size: '$uniqueVisitors' } } }
+        ],
+        daily: [
+          {
+            $group: {
+              _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+              visits: { $sum: 1 },
+              visitors: { $addToSet: '$visitorHash' }
+            }
+          },
+          { $project: { _id: 0, date: '$_id', visits: 1, visitors: { $size: '$visitors' } } },
+          { $sort: { date: 1 } }
+        ],
+        topPages: [
+          { $group: { _id: '$path', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+          { $limit: 10 },
+          { $project: { _id: 0, path: '$_id', count: 1 } }
+        ],
+        topCountries: [
+          { $match: { country: { $ne: '' } } },
+          { $group: { _id: '$country', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+          { $limit: 10 },
+          { $project: { _id: 0, country: '$_id', count: 1 } }
+        ],
+        devices: [
+          { $group: { _id: '$device', count: { $sum: 1 } } },
+          { $project: { _id: 0, device: '$_id', count: 1 } }
+        ]
+      }
+    }
+  ]);
+
+  res.json({
+    ok: true,
+    days,
+    totalVisits: result.totals[0]?.totalVisits || 0,
+    uniqueVisitors: result.totals[0]?.uniqueVisitors || 0,
+    daily: result.daily,
+    topPages: result.topPages,
+    topCountries: result.topCountries,
+    devices: result.devices
+  });
 });
 
 router.get('/settings', async (_req, res) => {

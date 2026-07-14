@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
+const geoip = require('geoip-lite');
 const Profile = require('../models/Profile');
 const Project = require('../models/Project');
 const Article = require('../models/Article');
@@ -9,10 +10,27 @@ const Message = require('../models/Message');
 const Order = require('../models/Order');
 const Quote = require('../models/Quote');
 const Subscriber = require('../models/Subscriber');
+const Visit = require('../models/Visit');
 const Settings = require('../models/Settings');
-const { publicWriteLimiter } = require('../middleware/rateLimit');
+const { publicWriteLimiter, trackingLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
+
+// Liste non-exhaustive mais couvre la grande majorité du trafic robots (moteurs de recherche,
+// previews de réseaux sociaux, monitoring, clients HTTP en ligne de commande...).
+const BOT_UA_PATTERN = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegrambot|discordbot|slackbot|curl|wget|python-requests|axios|headlesschrome|phantomjs|puppeteer|playwright|postman|uptimerobot|pingdom|ahrefsbot|semrushbot|mj12bot|dotbot/i;
+
+function detectDevice(userAgent) {
+  const ua = String(userAgent || '');
+  if (/tablet|ipad/i.test(ua)) return 'tablet';
+  if (/mobile|android|iphone|ipod/i.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
+function hashVisitor(ip, userAgent) {
+  const day = new Date().toISOString().slice(0, 10);
+  return crypto.createHash('sha256').update(`${ip}|${userAgent}|${day}`).digest('hex');
+}
 
 const receiptUpload = multer({
   storage: multer.memoryStorage(),
@@ -290,6 +308,32 @@ router.post('/quotes', publicWriteLimiter, handleQuoteUpload, async (req, res) =
     fileName
   });
   res.status(201).json({ ok: true, message: 'Demande de devis envoyée avec succès' });
+});
+
+router.post('/visit', trackingLimiter, async (req, res) => {
+  // Toujours répondre 204 même si on ignore la visite (bot, requête malformée) : le beacon
+  // frontend n'a rien à faire d'un échec, et on ne veut pas qu'une erreur réseau soit visible.
+  const userAgent = req.headers['user-agent'] || '';
+  if (BOT_UA_PATTERN.test(userAgent)) return res.status(204).end();
+
+  const { path: pagePath, referrer } = req.body || {};
+  if (typeof pagePath !== 'string' || !pagePath) return res.status(204).end();
+
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const geo = ip ? geoip.lookup(ip) : null;
+
+  try {
+    await Visit.create({
+      path: pagePath.slice(0, 200),
+      referrer: typeof referrer === 'string' ? referrer.slice(0, 200) : '',
+      country: geo?.country || '',
+      device: detectDevice(userAgent),
+      visitorHash: hashVisitor(ip, userAgent)
+    });
+  } catch {
+    // Le tracking ne doit jamais faire échouer la navigation du visiteur.
+  }
+  res.status(204).end();
 });
 
 module.exports = router;

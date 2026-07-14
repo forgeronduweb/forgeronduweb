@@ -867,7 +867,19 @@ function initCodeSnow() {
 window.addEventListener('DOMContentLoaded', () => {
   loadPortfolioData();
   initCodeSnow();
+  trackPageView();
 });
+
+// Ping anonyme (pas de cookie, pas d'identifiant persistant côté client) envoyé une fois par
+// chargement de page pour les statistiques de fréquentation dans l'admin.
+function trackPageView() {
+  const payload = JSON.stringify({ path: location.pathname + location.hash, referrer: document.referrer || '' });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(`${API_BASE}/visit`, new Blob([payload], { type: 'application/json' }));
+  } else {
+    fetch(`${API_BASE}/visit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
+  }
+}
 
 // Repère si le visiteur est en train de saisir un formulaire (contact, commentaire) ou de lire
 // un article/projet, pour ne jamais lui couper sa lecture ou effacer sa saisie en arrière-plan.

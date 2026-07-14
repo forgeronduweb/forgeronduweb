@@ -12,7 +12,8 @@ const subscriberSchema = new mongoose.Schema(
     email: { type: String, required: true },
     name: { type: String, default: '' },
     projectId: { type: String, required: true },
-    projectName: { type: String, required: true }
+    projectName: { type: String, required: true },
+    read: { type: Boolean, default: false }
   },
   { timestamps: true, toJSON: { transform: stripInternalFields }, toObject: { transform: stripInternalFields } }
 );

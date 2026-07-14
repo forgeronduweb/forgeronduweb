@@ -122,3 +122,14 @@ async function submitQuote() {
 document.getElementById('devis-form')?.addEventListener('submit', (e) => e.preventDefault());
 
 renderStep();
+
+// Ping anonyme (pas de cookie, pas d'identifiant persistant côté client) pour les statistiques
+// de fréquentation dans l'admin.
+(function trackPageView() {
+  const payload = JSON.stringify({ path: location.pathname, referrer: document.referrer || '' });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(`${API_BASE}/visit`, new Blob([payload], { type: 'application/json' }));
+  } else {
+    fetch(`${API_BASE}/visit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
+  }
+})();

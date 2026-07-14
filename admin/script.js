@@ -63,6 +63,8 @@ function goPage(name) {
   document.getElementById('breadcrumb').textContent = name;
   window.scrollTo(0, 0);
   closeSidebar();
+  if (name === 'visiteurs') loadVisitsSummary();
+  if (name === 'abonnes') markAllSubscribersRead();
 }
 
 document.querySelectorAll('.sb-link[data-page]').forEach(link => {
@@ -303,33 +305,28 @@ function commentsForArticle(articleId) {
   return comments.filter(c => c.articleId === articleId);
 }
 
+function setSidebarBadge(id, count) {
+  const badge = document.getElementById(id);
+  if (!badge) return;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? '' : 'none';
+}
+
 function renderDashboardStats() {
   const totalArticles = portfolio.articles.length;
   const published = portfolio.articles.filter(a => a.published).length;
   document.getElementById('stat-articles-count').textContent = totalArticles;
   document.getElementById('stat-articles-sub').textContent = `${published} publiés · ${totalArticles - published} brouillons`;
-  document.getElementById('badge-articles').textContent = totalArticles;
 
   const totalProjects = portfolio.projects.length;
   const live = portfolio.projects.filter(p => p.status === 'Live').length;
   document.getElementById('stat-projects-count').textContent = totalProjects;
   document.getElementById('stat-projects-sub').textContent = `${live} live · ${totalProjects - live} en cours`;
-  document.getElementById('badge-projects').textContent = totalProjects;
 
-  const unreadMessages = messages.filter(m => !m.read).length;
-  const badgeMessages = document.getElementById('badge-messages');
-  if (badgeMessages) badgeMessages.textContent = unreadMessages;
-
-  const unreadQuotes = quotes.filter(q => !q.read).length;
-  const badgeQuotes = document.getElementById('badge-quotes');
-  if (badgeQuotes) badgeQuotes.textContent = unreadQuotes;
-
-  const badgeAbonnes = document.getElementById('badge-abonnes');
-  if (badgeAbonnes) badgeAbonnes.textContent = subscribers.length;
-
-  const pendingOrders = orders.filter(o => o.status === 'pending').length;
-  const badgeOrders = document.getElementById('badge-orders');
-  if (badgeOrders) badgeOrders.textContent = pendingOrders;
+  setSidebarBadge('badge-messages', messages.filter(m => !m.read).length);
+  setSidebarBadge('badge-quotes', quotes.filter(q => !q.read).length);
+  setSidebarBadge('badge-abonnes', subscribers.filter(s => !s.read).length);
+  setSidebarBadge('badge-orders', orders.filter(o => !o.read).length);
 
   const paidOrders = orders.filter(o => o.status === 'paid');
   const revenue = paidOrders.reduce((sum, o) => sum + (o.price || 0), 0);
@@ -347,6 +344,67 @@ function renderDashboardStats() {
 
   renderSiteStatus();
   renderRecentActivity();
+  renderNotifications();
+}
+
+function toggleNotifMenu() {
+  document.getElementById('notif-wrap')?.classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('notif-wrap');
+  if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+    wrap.classList.remove('open');
+  }
+});
+
+function renderNotifications() {
+  const dot = document.getElementById('notif-dot');
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+
+  const items = [
+    ...messages.filter(m => !m.read).map(m => ({
+      date: new Date(m.createdAt), page: 'messages', color: 'blue',
+      text: `Message de <strong>${escapeHtml(m.name)}</strong>`
+    })),
+    ...quotes.filter(q => !q.read).map(q => ({
+      date: new Date(q.createdAt), page: 'devis', color: 'purple',
+      text: `Devis de <strong>${escapeHtml(q.name)}</strong>`
+    })),
+    ...orders.filter(o => !o.read).map(o => ({
+      date: new Date(o.createdAt), page: 'commandes', color: 'green',
+      text: `Commande de <strong>${escapeHtml(o.buyerName)}</strong> — ${escapeHtml(String(o.price))} ${escapeHtml(o.currency || 'XOF')}`
+    })),
+    ...subscribers.filter(s => !s.read).map(s => ({
+      date: new Date(s.createdAt), page: 'abonnes', color: 'orange',
+      text: `<strong>${escapeHtml(s.email)}</strong> a téléchargé « ${escapeHtml(s.projectName)} »`
+    }))
+  ].sort((a, b) => b.date - a.date);
+
+  if (dot) dot.style.display = items.length ? '' : 'none';
+
+  list.innerHTML = '';
+  if (!items.length) {
+    list.innerHTML = '<div class="notif-empty">Aucune nouvelle notification.</div>';
+    return;
+  }
+
+  items.slice(0, 20).forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'notif-item';
+    el.innerHTML = `
+      <div class="notif-item-dot" style="background:var(--${item.color})"></div>
+      <div class="notif-item-body">
+        <div class="notif-item-text">${item.text}</div>
+        <div class="notif-item-time">${formatRelativeTime(item.date)}</div>
+      </div>`;
+    el.addEventListener('click', () => {
+      document.getElementById('notif-wrap')?.classList.remove('open');
+      goPage(item.page);
+    });
+    list.appendChild(el);
+  });
 }
 
 function formatRelativeTime(date) {
@@ -697,13 +755,13 @@ function openMessageDetail(id) {
 
   const footer = `
     <a class="btn btn-ghost" style="text-decoration:none" href="mailto:${escapeHtml(msg.email)}?subject=${encodeURIComponent('Re: ' + msg.subject)}">${REPLY_ICON} Répondre</a>
-    ${!msg.read ? `<button class="btn btn-primary" onclick="closeModal('detail');markMessageRead('${msg.id}')">Marquer comme lu</button>` : ''}
     <button class="btn btn-danger" onclick="closeModal('detail');confirmDelete('ce message','messages','${msg.id}')">${DELETE_ICON} Supprimer</button>`;
 
   document.getElementById('detail-title').textContent = `Message de ${msg.name}`;
   document.getElementById('detail-body').innerHTML = body;
   document.getElementById('detail-footer').innerHTML = footer;
   showModal('detail');
+  if (!msg.read) markMessageRead(msg.id);
 }
 
 // ═══════════════ DEVIS ═══════════════
@@ -797,13 +855,13 @@ function openQuoteDetail(id) {
 
   const footer = `
     <a class="btn btn-ghost" style="text-decoration:none" href="mailto:${escapeHtml(quote.email)}?subject=${encodeURIComponent('Re: ta demande de devis')}">${REPLY_ICON} Répondre</a>
-    ${!quote.read ? `<button class="btn btn-primary" onclick="closeModal('detail');markQuoteRead('${quote.id}')">Marquer comme lu</button>` : ''}
     <button class="btn btn-danger" onclick="closeModal('detail');confirmDelete('cette demande de devis','quotes','${quote.id}')">${DELETE_ICON} Supprimer</button>`;
 
   document.getElementById('detail-title').textContent = `Devis de ${quote.name}`;
   document.getElementById('detail-body').innerHTML = body;
   document.getElementById('detail-footer').innerHTML = footer;
   showModal('detail');
+  if (!quote.read) markQuoteRead(quote.id);
 }
 
 // ═══════════════ MES ABONNÉS (téléchargements de templates) ═══════════════
@@ -823,7 +881,7 @@ function renderAbonnes() {
   sorted.forEach(sub => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${escapeHtml(sub.name || '—')}</td>
+      <td>${escapeHtml(sub.name || '—')} ${sub.read ? '' : '<span class="badge badge-orange">Nouveau</span>'}</td>
       <td class="td-mono">${escapeHtml(sub.email)}</td>
       <td>« ${escapeHtml(sub.projectName)} »</td>
       <td class="td-mono">${new Date(sub.createdAt).toLocaleDateString('fr-FR')}</td>
@@ -831,6 +889,19 @@ function renderAbonnes() {
     row.querySelector('.delete-btn').addEventListener('click', () => confirmDelete(`l'abonné ${sub.email}`, 'subscribers', sub.id));
     container.appendChild(row);
   });
+}
+
+async function markAllSubscribersRead() {
+  if (!subscribers.some(s => !s.read)) return;
+  try {
+    const response = await apiFetch('/admin/subscribers/read-all', { method: 'PUT' });
+    if (!response.ok) throw new Error('Erreur');
+
+    subscribers.forEach(s => { s.read = true; });
+    renderDashboardStats();
+  } catch (error) {
+    // Échec silencieux : la liste reste correcte, seul le badge ne se met pas à jour immédiatement.
+  }
 }
 
 // ═══════════════ COMMANDES ═══════════════
@@ -1065,6 +1136,197 @@ function renderRevenueTimeChart(paidOrders, currency) {
   });
 }
 
+// ═══════════════ VISITEURS ═══════════════
+
+let visitsChart = null;
+
+let visitsRangeDays = 30;
+
+function toggleVisitsRangeMenu() {
+  document.getElementById('visits-range-select')?.classList.toggle('open');
+}
+
+function selectVisitsRange(days) {
+  visitsRangeDays = days;
+  const select = document.getElementById('visits-range-select');
+  select?.classList.remove('open');
+  select?.querySelectorAll('.custom-select-option').forEach(opt => {
+    opt.classList.toggle('active', Number(opt.dataset.value) === days);
+  });
+  const label = select?.querySelector(`.custom-select-option[data-value="${days}"]`)?.textContent;
+  const labelEl = document.getElementById('visits-range-label');
+  if (labelEl && label) labelEl.textContent = label;
+  loadVisitsSummary();
+}
+
+document.addEventListener('click', (e) => {
+  const select = document.getElementById('visits-range-select');
+  if (select && select.classList.contains('open') && !select.contains(e.target)) {
+    select.classList.remove('open');
+  }
+});
+
+async function loadVisitsSummary() {
+  const days = visitsRangeDays;
+  try {
+    const response = await apiFetch(`/admin/visits/summary?days=${days}`);
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+    renderVisitsSummary(body);
+  } catch (error) {
+    console.error('Erreur de chargement des visiteurs', error);
+  }
+}
+
+function deviceLabel(device) {
+  return { desktop: 'Ordinateur', mobile: 'Mobile', tablet: 'Tablette' }[device] || device;
+}
+
+// Convertit le code ISO renvoyé par geoip-lite ("CI", "US"...) en nom lisible, via l'API
+// native du navigateur — aucune table de correspondance à maintenir.
+const countryDisplayNames = typeof Intl !== 'undefined' && Intl.DisplayNames
+  ? new Intl.DisplayNames(['fr'], { type: 'region' })
+  : null;
+
+function countryLabel(code) {
+  if (!code) return 'Inconnu';
+  try {
+    return countryDisplayNames?.of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
+function renderVisitsSummary(data) {
+  const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+  setText('visits-total', data.totalVisits.toLocaleString('fr-FR'));
+  setText('visits-total-sub', `sur ${data.days} jours`);
+  setText('visits-unique', data.uniqueVisitors.toLocaleString('fr-FR'));
+
+  const topPage = data.topPages[0];
+  setText('visits-top-page', topPage ? topPage.path : '—');
+  setText('visits-top-page-sub', topPage ? `${topPage.count} vue${topPage.count > 1 ? 's' : ''}` : '—');
+
+  const topCountry = data.topCountries[0];
+  setText('visits-top-country', topCountry ? countryLabel(topCountry.country) : '—');
+  setText('visits-top-country-sub', topCountry ? `${topCountry.count} visite${topCountry.count > 1 ? 's' : ''}` : 'géolocalisation indisponible');
+
+  renderVisitsChart(data.daily);
+  renderVisitsBreakdown('visits-top-pages', data.topPages, row => row.path, row => row.count);
+  renderVisitsBreakdown('visits-countries', data.topCountries, row => countryLabel(row.country), row => row.count);
+  renderVisitsBreakdown(
+    'visits-devices',
+    [...data.devices].sort((a, b) => b.count - a.count),
+    row => deviceLabel(row.device),
+    row => row.count
+  );
+}
+
+function renderVisitsBreakdown(containerId, rows, labelFn, valueFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = '';
+  if (!rows.length) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--muted)">Aucune donnée pour le moment.</p>';
+    return;
+  }
+
+  const max = Math.max(...rows.map(valueFn));
+  rows.forEach(row => {
+    const value = valueFn(row);
+    const item = document.createElement('div');
+    item.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span>${escapeHtml(String(labelFn(row)))}</span>
+        <span style="font-family:var(--mono)">${value.toLocaleString('fr-FR')}</span>
+      </div>
+      <div class="progress"><div class="progress-fill blue" style="width:${max ? Math.round((value / max) * 100) : 0}%"></div></div>`;
+    container.appendChild(item);
+  });
+}
+
+function renderVisitsChart(daily) {
+  const canvas = document.getElementById('visitsChart');
+  if (!canvas) return;
+
+  const labels = daily.map(d => new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+  const fullDates = daily.map(d => new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }));
+  const visits = daily.map(d => d.visits);
+  const visitors = daily.map(d => d.visitors);
+
+  if (visitsChart) visitsChart.destroy();
+  visitsChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Visites',
+          data: visits,
+          borderColor: CHART_BLUE,
+          backgroundColor: CHART_BLUE_WASH,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          pointBackgroundColor: CHART_BLUE,
+          pointBorderColor: CHART_SURFACE,
+          pointBorderWidth: 2,
+          fill: true,
+          tension: 0.25
+        },
+        {
+          label: 'Visiteurs uniques',
+          data: visitors,
+          borderColor: CHART_MUTED,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: false,
+          tension: 0.25
+        }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { color: CHART_MUTED, boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } }
+        },
+        tooltip: {
+          backgroundColor: CHART_SURFACE,
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: CHART_MUTED,
+          bodyColor: CHART_TEXT,
+          padding: 10,
+          callbacks: { title: (items) => fullDates[items[0].dataIndex] }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: CHART_MUTED, autoSkip: true, maxRotation: 0 }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: CHART_GRID, drawTicks: false },
+          border: { display: false },
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
+}
+
 function renderOrders() {
   const container = document.getElementById('orders-list');
   if (!container) return;
@@ -1100,9 +1362,11 @@ function renderOrders() {
           <span class="comment-author">${escapeHtml(order.buyerName)}</span>
           <span class="comment-article-ref">${escapeHtml(order.buyerEmail)}</span>
           <span class="badge ${order.status === 'paid' ? 'badge-green' : 'badge-orange'}">${order.status === 'paid' ? 'Payée' : 'En attente'}</span>
+          ${order.read ? '' : '<span class="badge badge-orange">Non lu</span>'}
         </div>
         <div class="article-actions">
           ${order.status === 'pending' ? `<div class="icon-btn approve-btn" title="Marquer payé">${APPROVE_ICON}</div>` : ''}
+          ${order.read ? '' : `<div class="icon-btn read-btn" title="Marquer comme lu">${APPROVE_ICON}</div>`}
           <div class="icon-btn danger delete-btn" title="Supprimer">${DELETE_ICON}</div>
         </div>
       </div>
@@ -1124,6 +1388,9 @@ function renderOrders() {
     card.querySelector('.order-download-row')?.addEventListener('click', e => e.stopPropagation());
     if (order.status === 'pending') {
       card.querySelector('.approve-btn').addEventListener('click', () => markOrderPaid(order.id));
+    }
+    if (!order.read) {
+      card.querySelector('.read-btn').addEventListener('click', () => markOrderRead(order.id));
     }
     if (downloadLink) {
       card.querySelector('.copy-link-btn').addEventListener('click', () => copyOrderLink(downloadLink));
@@ -1179,6 +1446,22 @@ function openOrderDetail(id) {
     confirmDelete(`la commande de ${order.buyerName}`, 'orders', order.id);
   });
   showModal('detail');
+  if (!order.read) markOrderRead(order.id);
+}
+
+async function markOrderRead(id) {
+  try {
+    const response = await apiFetch(`/admin/orders/${id}/read`, { method: 'PUT' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    const order = orders.find(o => o.id === id);
+    if (order) order.read = true;
+    renderOrders();
+    renderDashboardStats();
+  } catch (error) {
+    showToast(error.message || 'Échec de la mise à jour', 'error');
+  }
 }
 
 async function copyOrderLink(link) {

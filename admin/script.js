@@ -9,6 +9,7 @@ const REPLY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 let portfolio = { profile: {}, projects: [], articles: [] };
 let comments = [];
 let messages = [];
+let quotes = [];
 let orders = [];
 let subscribers = [];
 let settings = {};
@@ -21,6 +22,7 @@ let deleteContext = null;
 let articleFilter = 'all';
 let orderFilter = 'all';
 let messageFilter = 'all';
+let quoteFilter = 'all';
 let lastSyncAt = null;
 
 function escapeHtml(str) {
@@ -257,6 +259,10 @@ async function init({ silent = false } = {}) {
     const messagesBody = await messagesRes.json();
     messages = messagesBody.messages || [];
 
+    const quotesRes = await apiFetch('/admin/quotes');
+    const quotesBody = await quotesRes.json();
+    quotes = quotesBody.quotes || [];
+
     const ordersRes = await apiFetch('/admin/orders');
     const ordersBody = await ordersRes.json();
     orders = ordersBody.orders || [];
@@ -276,6 +282,7 @@ async function init({ silent = false } = {}) {
     renderArticles();
     renderProfileForm();
     renderMessages();
+    renderQuotes();
     renderAbonnes();
     renderOrders();
     renderSettingsForm();
@@ -312,6 +319,10 @@ function renderDashboardStats() {
   const unreadMessages = messages.filter(m => !m.read).length;
   const badgeMessages = document.getElementById('badge-messages');
   if (badgeMessages) badgeMessages.textContent = unreadMessages;
+
+  const unreadQuotes = quotes.filter(q => !q.read).length;
+  const badgeQuotes = document.getElementById('badge-quotes');
+  if (badgeQuotes) badgeQuotes.textContent = unreadQuotes;
 
   const badgeAbonnes = document.getElementById('badge-abonnes');
   if (badgeAbonnes) badgeAbonnes.textContent = subscribers.length;
@@ -629,7 +640,7 @@ function renderMessages() {
 
   visible.forEach(msg => {
     const card = document.createElement('div');
-    card.className = 'article-card';
+    card.className = 'article-card clickable';
     card.innerHTML = `
       <div class="article-card-top">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -646,10 +657,12 @@ function renderMessages() {
       <div class="article-title">${escapeHtml(msg.subject)}</div>
       <div class="comment-message">${escapeHtml(msg.message)}</div>
       <div class="article-meta"><span>${new Date(msg.createdAt).toLocaleDateString('fr-FR')}</span></div>`;
+    card.querySelector('.article-actions').addEventListener('click', e => e.stopPropagation());
     if (!msg.read) {
       card.querySelector('.read-btn').addEventListener('click', () => markMessageRead(msg.id));
     }
     card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('ce message', 'messages', msg.id));
+    card.addEventListener('click', () => openMessageDetail(msg.id));
     container.appendChild(card);
   });
 }
@@ -667,6 +680,130 @@ async function markMessageRead(id) {
   } catch (error) {
     showToast(error.message || 'Échec de la mise à jour', 'error');
   }
+}
+
+function openMessageDetail(id) {
+  const msg = messages.find(m => m.id === id);
+  if (!msg) return;
+
+  const body = `
+    <div class="detail-grid">
+      <div class="detail-row"><div class="detail-label">Nom</div><div class="detail-value">${escapeHtml(msg.name)}</div></div>
+      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${escapeHtml(msg.email)}</div></div>
+    </div>
+    <div class="detail-row"><div class="detail-label">Sujet</div><div class="detail-value">${escapeHtml(msg.subject)}</div></div>
+    <div class="detail-row"><div class="detail-label">Message</div><div class="detail-value">${escapeHtml(msg.message)}</div></div>
+    <div class="detail-row"><div class="detail-label">Reçu le</div><div class="detail-value">${new Date(msg.createdAt).toLocaleString('fr-FR')}</div></div>`;
+
+  const footer = `
+    <a class="btn btn-ghost" style="text-decoration:none" href="mailto:${escapeHtml(msg.email)}?subject=${encodeURIComponent('Re: ' + msg.subject)}">${REPLY_ICON} Répondre</a>
+    ${!msg.read ? `<button class="btn btn-primary" onclick="closeModal('detail');markMessageRead('${msg.id}')">Marquer comme lu</button>` : ''}
+    <button class="btn btn-danger" onclick="closeModal('detail');confirmDelete('ce message','messages','${msg.id}')">${DELETE_ICON} Supprimer</button>`;
+
+  document.getElementById('detail-title').textContent = `Message de ${msg.name}`;
+  document.getElementById('detail-body').innerHTML = body;
+  document.getElementById('detail-footer').innerHTML = footer;
+  showModal('detail');
+}
+
+// ═══════════════ DEVIS ═══════════════
+
+function setQuoteFilter(filter, btn) {
+  quoteFilter = filter;
+  filterToggle(btn);
+  renderQuotes();
+}
+
+function renderQuotes() {
+  const container = document.getElementById('quotes-list');
+  if (!container) return;
+
+  const total = quotes.length;
+  const unread = quotes.filter(q => !q.read).length;
+  const countAll = document.getElementById('quote-count-all');
+  const countUnread = document.getElementById('quote-count-unread');
+  if (countAll) countAll.textContent = total;
+  if (countUnread) countUnread.textContent = unread;
+
+  const visible = quoteFilter === 'unread' ? quotes.filter(q => !q.read) : quotes;
+
+  container.innerHTML = '';
+  if (!visible.length) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--muted)">Aucune demande de devis.</p>';
+    return;
+  }
+
+  visible.forEach(quote => {
+    const card = document.createElement('div');
+    card.className = 'article-card clickable';
+    const details = [quote.projectType, quote.budget, quote.phone].filter(Boolean);
+    card.innerHTML = `
+      <div class="article-card-top">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="comment-author">${escapeHtml(quote.name)}</span>
+          <span class="comment-article-ref">${escapeHtml(quote.email)}</span>
+          ${quote.read ? '' : '<span class="badge badge-orange">Non lu</span>'}
+        </div>
+        <div class="article-actions">
+          <a class="icon-btn" title="Répondre par email" href="mailto:${escapeHtml(quote.email)}?subject=${encodeURIComponent('Re: ta demande de devis')}">${REPLY_ICON}</a>
+          ${quote.read ? '' : `<div class="icon-btn read-btn" title="Marquer comme lu">${APPROVE_ICON}</div>`}
+          <div class="icon-btn danger delete-btn" title="Supprimer">${DELETE_ICON}</div>
+        </div>
+      </div>
+      ${details.length ? `<div class="article-meta">${details.map(d => `<span>${escapeHtml(d)}</span>`).join('')}</div>` : ''}
+      <div class="comment-message">${escapeHtml(quote.description)}</div>
+      ${quote.fileUrl ? `<div class="article-meta"><a href="${escapeHtml(quote.fileUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(quote.fileName || 'fichier joint')}</a></div>` : ''}
+      <div class="article-meta"><span>${new Date(quote.createdAt).toLocaleDateString('fr-FR')}</span></div>`;
+    card.querySelector('.article-actions').addEventListener('click', e => e.stopPropagation());
+    if (!quote.read) {
+      card.querySelector('.read-btn').addEventListener('click', () => markQuoteRead(quote.id));
+    }
+    card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('cette demande de devis', 'quotes', quote.id));
+    card.addEventListener('click', () => openQuoteDetail(quote.id));
+    container.appendChild(card);
+  });
+}
+
+async function markQuoteRead(id) {
+  try {
+    const response = await apiFetch(`/admin/quotes/${id}/read`, { method: 'PUT' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Erreur');
+
+    const quote = quotes.find(q => q.id === id);
+    if (quote) quote.read = true;
+    renderQuotes();
+    renderDashboardStats();
+  } catch (error) {
+    showToast(error.message || 'Échec de la mise à jour', 'error');
+  }
+}
+
+function openQuoteDetail(id) {
+  const quote = quotes.find(q => q.id === id);
+  if (!quote) return;
+
+  const body = `
+    <div class="detail-grid">
+      <div class="detail-row"><div class="detail-label">Nom</div><div class="detail-value">${escapeHtml(quote.name)}</div></div>
+      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${escapeHtml(quote.email)}</div></div>
+      <div class="detail-row"><div class="detail-label">Téléphone</div><div class="detail-value">${quote.phone ? escapeHtml(quote.phone) : '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Type de projet</div><div class="detail-value">${quote.projectType ? escapeHtml(quote.projectType) : '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Budget estimé</div><div class="detail-value">${quote.budget ? escapeHtml(quote.budget) : '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Reçu le</div><div class="detail-value">${new Date(quote.createdAt).toLocaleString('fr-FR')}</div></div>
+    </div>
+    <div class="detail-row"><div class="detail-label">Description du projet</div><div class="detail-value">${escapeHtml(quote.description)}</div></div>
+    ${quote.fileUrl ? `<div class="detail-row"><div class="detail-label">Fichier joint</div><div class="detail-value"><a href="${escapeHtml(quote.fileUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(quote.fileName || 'fichier joint')}</a></div></div>` : ''}`;
+
+  const footer = `
+    <a class="btn btn-ghost" style="text-decoration:none" href="mailto:${escapeHtml(quote.email)}?subject=${encodeURIComponent('Re: ta demande de devis')}">${REPLY_ICON} Répondre</a>
+    ${!quote.read ? `<button class="btn btn-primary" onclick="closeModal('detail');markQuoteRead('${quote.id}')">Marquer comme lu</button>` : ''}
+    <button class="btn btn-danger" onclick="closeModal('detail');confirmDelete('cette demande de devis','quotes','${quote.id}')">${DELETE_ICON} Supprimer</button>`;
+
+  document.getElementById('detail-title').textContent = `Devis de ${quote.name}`;
+  document.getElementById('detail-body').innerHTML = body;
+  document.getElementById('detail-footer').innerHTML = footer;
+  showModal('detail');
 }
 
 // ═══════════════ MES ABONNÉS (téléchargements de templates) ═══════════════
@@ -956,7 +1093,7 @@ function renderOrders() {
   visible.forEach(order => {
     const downloadLink = order.status === 'paid' ? `${location.origin}/api/orders/${order.downloadToken}/download` : '';
     const card = document.createElement('div');
-    card.className = 'article-card';
+    card.className = 'article-card clickable';
     card.innerHTML = `
       <div class="article-card-top">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -977,12 +1114,14 @@ function renderOrders() {
           : `Preuve : numéro Wave <strong>${escapeHtml(order.waveNumber)}</strong> · transaction <strong>${escapeHtml(order.transactionId)}</strong>`}
       </div>
       ${downloadLink ? `
-        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <div class="order-download-row" style="display:flex;align-items:center;gap:8px;margin-top:6px">
           <input class="form-input mono" style="font-size:11px" readonly value="${escapeHtml(downloadLink)}">
           <button class="btn btn-ghost copy-link-btn" style="font-size:12px;flex-shrink:0">Copier</button>
           <span style="font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0">${order.downloadCount || 0}/${order.maxDownloads || 2} utilisés</span>
         </div>` : ''}
       <div class="article-meta"><span>Commandé le ${new Date(order.createdAt).toLocaleDateString('fr-FR')}</span>${order.paidAt ? `<span>Payé le ${new Date(order.paidAt).toLocaleDateString('fr-FR')}</span>` : ''}</div>`;
+    card.querySelector('.article-actions').addEventListener('click', e => e.stopPropagation());
+    card.querySelector('.order-download-row')?.addEventListener('click', e => e.stopPropagation());
     if (order.status === 'pending') {
       card.querySelector('.approve-btn').addEventListener('click', () => markOrderPaid(order.id));
     }
@@ -990,8 +1129,56 @@ function renderOrders() {
       card.querySelector('.copy-link-btn').addEventListener('click', () => copyOrderLink(downloadLink));
     }
     card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete(`la commande de ${order.buyerName}`, 'orders', order.id));
+    card.addEventListener('click', () => openOrderDetail(order.id));
     container.appendChild(card);
   });
+}
+
+function openOrderDetail(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  const downloadLink = order.status === 'paid' ? `${location.origin}/api/orders/${order.downloadToken}/download` : '';
+
+  const body = `
+    <div class="detail-grid">
+      <div class="detail-row"><div class="detail-label">Acheteur</div><div class="detail-value">${escapeHtml(order.buyerName)}</div></div>
+      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${escapeHtml(order.buyerEmail)}</div></div>
+      <div class="detail-row"><div class="detail-label">Téléphone</div><div class="detail-value">${order.buyerPhone ? escapeHtml(order.buyerPhone) : '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Statut</div><div class="detail-value"><span class="badge ${order.status === 'paid' ? 'badge-green' : 'badge-orange'}">${order.status === 'paid' ? 'Payée' : 'En attente'}</span></div></div>
+      <div class="detail-row"><div class="detail-label">Projet</div><div class="detail-value">${escapeHtml(order.projectName)}</div></div>
+      <div class="detail-row"><div class="detail-label">Prix</div><div class="detail-value">${escapeHtml(String(order.price))} ${escapeHtml(order.currency || 'XOF')}</div></div>
+      <div class="detail-row"><div class="detail-label">Commandé le</div><div class="detail-value">${new Date(order.createdAt).toLocaleString('fr-FR')}</div></div>
+      ${order.paidAt ? `<div class="detail-row"><div class="detail-label">Payé le</div><div class="detail-value">${new Date(order.paidAt).toLocaleString('fr-FR')}</div></div>` : ''}
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Preuve de paiement</div>
+      <div class="detail-value">${order.proofMethod === 'receipt'
+        ? `<a href="${escapeHtml(order.receiptFileUrl)}" target="_blank" rel="noopener">voir le reçu PDF (${escapeHtml(order.receiptFileName || 'recu.pdf')})</a>`
+        : `Numéro Wave <strong>${escapeHtml(order.waveNumber)}</strong> · transaction <strong>${escapeHtml(order.transactionId)}</strong>`}</div>
+    </div>
+    ${downloadLink ? `
+    <div class="detail-row">
+      <div class="detail-label">Lien de téléchargement (${order.downloadCount || 0}/${order.maxDownloads || 2} utilisés)</div>
+      <div class="detail-value" style="display:flex;align-items:center;gap:8px">
+        <input class="form-input mono" style="font-size:11px" readonly value="${escapeHtml(downloadLink)}">
+        <button class="btn btn-ghost" style="font-size:12px;flex-shrink:0" onclick="copyOrderLink('${downloadLink}')">Copier</button>
+      </div>
+    </div>` : ''}`;
+
+  const footer = `
+    ${order.status === 'pending' ? `<button class="btn btn-primary" onclick="closeModal('detail');markOrderPaid('${order.id}')">Marquer payé</button>` : ''}
+    <button class="btn btn-danger" id="detail-delete-order-btn">${DELETE_ICON} Supprimer</button>`;
+
+  document.getElementById('detail-title').textContent = `Commande de ${order.buyerName}`;
+  document.getElementById('detail-body').innerHTML = body;
+  document.getElementById('detail-footer').innerHTML = footer;
+  // buyerName est saisi par un visiteur non authentifié : on l'attache via addEventListener plutôt
+  // que de l'interpoler dans un attribut onclick="", pour ne pas pouvoir casser le JS avec une apostrophe.
+  document.getElementById('detail-delete-order-btn').addEventListener('click', () => {
+    closeModal('detail');
+    confirmDelete(`la commande de ${order.buyerName}`, 'orders', order.id);
+  });
+  showModal('detail');
 }
 
 async function copyOrderLink(link) {
@@ -1206,6 +1393,7 @@ function openEditProject(id) {
   document.getElementById('edit-projet-name').value = project.name;
   document.getElementById('edit-projet-description').value = project.description;
   document.getElementById('edit-projet-status').value = project.status;
+  document.getElementById('edit-projet-category').value = project.category || 'Fullstack';
   document.getElementById('edit-projet-demo').value = project.demo || '';
   document.getElementById('edit-projet-github').value = project.github || '';
   document.getElementById('edit-projet-tech').value = (project.tech || []).join(', ');
@@ -1387,6 +1575,7 @@ async function submitNewProject() {
     name: document.getElementById('new-projet-name').value.trim(),
     description: document.getElementById('new-projet-description').value.trim(),
     status: document.getElementById('new-projet-status').value,
+    category: document.getElementById('new-projet-category').value,
     demo: document.getElementById('new-projet-demo').value.trim(),
     github: document.getElementById('new-projet-github').value.trim(),
     tech: parseTechInput(document.getElementById('new-projet-tech').value),
@@ -1444,6 +1633,7 @@ async function submitEditProject() {
     name: document.getElementById('edit-projet-name').value.trim(),
     description: document.getElementById('edit-projet-description').value.trim(),
     status: document.getElementById('edit-projet-status').value,
+    category: document.getElementById('edit-projet-category').value,
     demo: document.getElementById('edit-projet-demo').value.trim(),
     github: document.getElementById('edit-projet-github').value.trim(),
     tech: parseTechInput(document.getElementById('edit-projet-tech').value),
@@ -1583,11 +1773,13 @@ async function performDelete() {
     if (type === 'articles') portfolio.articles = portfolio.articles.filter(a => a.id !== id);
     if (type === 'comments') comments = comments.filter(c => c.id !== id);
     if (type === 'messages') messages = messages.filter(m => m.id !== id);
+    if (type === 'quotes') quotes = quotes.filter(q => q.id !== id);
     if (type === 'subscribers') subscribers = subscribers.filter(s => s.id !== id);
     if (type === 'orders') orders = orders.filter(o => o.id !== id);
     renderProjects();
     renderArticles();
     renderMessages();
+    renderQuotes();
     renderAbonnes();
     renderOrders();
     renderDashboardStats();

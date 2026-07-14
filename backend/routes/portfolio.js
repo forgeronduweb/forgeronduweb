@@ -7,6 +7,7 @@ const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
 const Order = require('../models/Order');
+const Quote = require('../models/Quote');
 const Subscriber = require('../models/Subscriber');
 const Settings = require('../models/Settings');
 const { publicWriteLimiter } = require('../middleware/rateLimit');
@@ -33,6 +34,52 @@ function handleReceiptUpload(req, res, next) {
     if (err) return res.status(400).json({ ok: false, message: err.message });
     next();
   });
+}
+
+const quoteUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/octet-stream'
+    ];
+    if (!allowed.includes(file.mimetype)) {
+      return cb(new Error('Format non supporté (PDF, ZIP, DOC/DOCX, JPG, PNG ou WebP)'));
+    }
+    cb(null, true);
+  }
+});
+
+function handleQuoteUpload(req, res, next) {
+  quoteUpload.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, message: err.message });
+    next();
+  });
+}
+
+// Le Content-Type déclaré par le client est falsifiable : on retrouve le vrai type via les
+// premiers octets du fichier avant de le stocker, comme pour les reçus et médias admin.
+function detectQuoteFileMimetype(buffer, declaredMimetype) {
+  if (!buffer || buffer.length < 4) return null;
+  if (buffer.toString('ascii', 0, 4) === '%PDF') return 'application/pdf';
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) return 'image/png';
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  if (buffer[0] === 0x50 && buffer[1] === 0x4b && [0x03, 0x05, 0x07].includes(buffer[2])) {
+    return declaredMimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ? declaredMimetype
+      : 'application/zip';
+  }
+  if (buffer[0] === 0xd0 && buffer[1] === 0xcf && buffer[2] === 0x11 && buffer[3] === 0xe0) return 'application/msword';
+  return null;
 }
 
 router.get('/health', (_req, res) => {
@@ -213,6 +260,36 @@ router.post('/contact', publicWriteLimiter, async (req, res) => {
 
   await Message.create({ name, email, subject, message });
   res.json({ ok: true, message: 'Message reçu avec succès' });
+});
+
+router.post('/quotes', publicWriteLimiter, handleQuoteUpload, async (req, res) => {
+  const { name, email, phone, projectType, budget, description } = req.body || {};
+  if (!name || !email || !description) {
+    return res.status(400).json({ ok: false, message: 'Nom, email et description sont requis' });
+  }
+
+  let fileUrl = '';
+  let fileName = '';
+  if (req.file) {
+    const detectedMimetype = detectQuoteFileMimetype(req.file.buffer, req.file.mimetype);
+    if (!detectedMimetype) {
+      return res.status(400).json({ ok: false, message: 'Le fichier joint ne semble pas être un fichier valide' });
+    }
+    fileUrl = `data:${detectedMimetype};base64,${req.file.buffer.toString('base64')}`;
+    fileName = req.file.originalname;
+  }
+
+  await Quote.create({
+    name,
+    email,
+    phone: phone || '',
+    projectType: projectType || '',
+    budget: budget || '',
+    description,
+    fileUrl,
+    fileName
+  });
+  res.status(201).json({ ok: true, message: 'Demande de devis envoyée avec succès' });
 });
 
 module.exports = router;

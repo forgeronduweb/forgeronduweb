@@ -13,6 +13,7 @@ const projectSchema = new mongoose.Schema(
     description: { type: String, required: true },
     imageUrl: { type: String, default: '' },
     status: { type: String, default: 'En cours' },
+    category: { type: String, enum: ['Fullstack', 'Frontend', 'Dashboards'], default: 'Fullstack' },
     tech: { type: [String], default: [] },
     demo: { type: String, default: '' },
     github: { type: String, default: '' },

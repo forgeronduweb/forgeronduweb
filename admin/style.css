@@ -628,6 +628,8 @@ tbody tr:hover td { background: rgba(255,255,255,.015); }
   transition: border-color .14s;
 }
 .article-card:hover { border-color: var(--border2); }
+.article-card.clickable { cursor: pointer; }
+.article-card.clickable:hover { border-color: var(--border3); background: var(--bg4); }
 .article-card-top {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
   margin-bottom: 8px;
@@ -799,6 +801,17 @@ tbody tr:hover td { background: rgba(255,255,255,.015); }
   border-top: 1px solid var(--border);
   display: flex; gap: 8px; justify-content: flex-end;
 }
+
+.detail-row { margin-bottom: 16px; }
+.detail-row:last-child { margin-bottom: 0; }
+.detail-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); font-family: var(--mono); margin-bottom: 6px;
+}
+.detail-value { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.detail-value a { color: var(--blue); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+@media (max-width: 480px) { .detail-grid { grid-template-columns: 1fr; } }
 
 /* ═══════════════════════════════════════
    PROGRESS BAR

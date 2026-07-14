@@ -22,7 +22,7 @@ menuToggle?.addEventListener('click', () => {
 });
 mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
 
-document.querySelectorAll('.nav-link[data-section], .mobile-link[data-section]').forEach(link => {
+document.querySelectorAll('.nav-link[data-section], .mobile-link[data-section], .logo-mark').forEach(link => {
   link.addEventListener('click', () => {
     closeMobileMenu();
     if (document.body.classList.contains('viewing-article')) hideArticle();
@@ -242,10 +242,21 @@ function requestFreeFile(id) {
   );
 }
 
+let projectFilter = 'all';
+
+function applyProjectFilter() {
+  document.querySelectorAll('.project-card').forEach(card => {
+    const matches = projectFilter === 'all' || card.dataset.category === projectFilter;
+    card.style.display = matches ? '' : 'none';
+  });
+}
+
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    projectFilter = btn.dataset.category || 'all';
+    applyProjectFilter();
   });
 });
 
@@ -593,6 +604,7 @@ async function loadPortfolioData({ silent = false } = {}) {
 
         const card = document.createElement('div');
         card.className = 'project-card' + (project.imageUrl ? ' has-image' : '');
+        card.dataset.category = project.category || 'Fullstack';
         card.onclick = () => showProject(project.id);
         const demoHref = safeHref(project.demo);
         const githubHref = safeHref(project.github);
@@ -631,7 +643,7 @@ async function loadPortfolioData({ silent = false } = {}) {
             const paymentHref = safeHref(project.paymentLink);
             const priceLabel = `${escapeHtml(String(project.price))} ${escapeHtml(project.currency || 'XOF')}`;
             const openPaymentJs = paymentHref ? `window.open('${escapeHtml(paymentHref)}','_blank','noopener');` : '';
-            downloadCta = `<button type="button" class="btn-hero-secondary project-cta" onclick="${openPaymentJs}toggleBuyForm('${project.id}')">💳 Acheter — ${priceLabel}</button>
+            downloadCta = `<button type="button" class="btn-hero-secondary project-cta" onclick="${openPaymentJs}toggleBuyForm('${project.id}')">Obtenir pour ${priceLabel}</button>
                 <div class="buy-form" id="buy-form-${project.id}" style="display:none">
                   <p class="buy-form-hint">Une fois le paiement effectué sur Wave, envoie ta preuve ci-dessous pour recevoir ton lien de téléchargement.</p>
                   <input class="form-input" type="text" id="buy-name-${project.id}" placeholder="Ton nom">
@@ -674,6 +686,7 @@ async function loadPortfolioData({ silent = false } = {}) {
           projectViews.appendChild(view);
         }
       });
+      applyProjectFilter();
       openProjectFromHash();
     }
 

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demande de devis — Forgeron du web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="devis-page">
+
+    <!-- ─── TOPBAR ─── -->
+    <div class="devis-topbar">
+        <a class="logo-mark" href="index.html">
+            <div>
+                <div class="logo-text">Forgeron du web</div>
+                <div class="logo-sub">Byevrardbaho</div>
+            </div>
+        </a>
+        <a class="btn-hero-secondary" href="index.html">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Retour au portfolio
+        </a>
+    </div>
+
+    <!-- ─── WIZARD ─── -->
+    <main class="devis-main">
+        <div class="wizard">
+            <div class="wizard-progress-track">
+                <div class="wizard-progress-fill" id="wizard-progress-fill" style="width:25%"></div>
+            </div>
+            <div class="wizard-step-label" id="wizard-step-label">Étape 1 sur 4</div>
+
+            <form id="devis-form">
+                <!-- ── STEP 1 : TYPE DE PROJET ── -->
+                <section class="wizard-panel active" data-step="1">
+                    <div class="wizard-title">Quel type de projet as-tu en tête ?</div>
+                    <p class="wizard-sub">Choisis l'option qui correspond le mieux à ta demande.</p>
+                    <div class="choice-grid" data-group="projectType">
+                        <button type="button" class="choice-card" data-value="Site vitrine">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Site vitrine</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="E-commerce">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">E-commerce</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="Application web">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Application web</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="Refonte de site existant">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Refonte de site existant</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="Autre">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Autre</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ── STEP 2 : BUDGET & DÉLAI ── -->
+                <section class="wizard-panel" data-step="2">
+                    <div class="wizard-title">Quel est ton budget ?</div>
+                    <p class="wizard-sub">Une estimation suffit, on l'affinera ensemble.</p>
+                    <div class="choice-grid" data-group="budget">
+                        <button type="button" class="choice-card" data-value="Moins de 500 000 XOF">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Moins de 500 000 XOF</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="500 000 - 1 000 000 XOF">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">500 000 - 1 000 000 XOF</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="1 000 000 - 3 000 000 XOF">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">1 000 000 - 3 000 000 XOF</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="Plus de 3 000 000 XOF">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Plus de 3 000 000 XOF</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="Je ne sais pas encore">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Je ne sais pas encore</span>
+                        </button>
+                    </div>
+
+                    <div class="wizard-field-group-label">Délai souhaité (optionnel)</div>
+                    <div class="choice-grid" data-group="timeline">
+                        <button type="button" class="choice-card" data-value="Moins d'1 mois">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Moins d'1 mois</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="1 à 3 mois">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">1 à 3 mois</span>
+                        </button>
+                        <button type="button" class="choice-card" data-value="Pas pressé(e)">
+                            <span class="choice-card-dot"></span>
+                            <span class="choice-card-label">Pas pressé(e)</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ── STEP 3 : DESCRIPTION & FICHIER ── -->
+                <section class="wizard-panel" data-step="3">
+                    <div class="wizard-title">Parle-moi de ton projet</div>
+                    <p class="wizard-sub">Objectifs, fonctionnalités attendues, contraintes... plus c'est précis,
+                        plus l'estimation sera juste.</p>
+                    <div class="form-group">
+                        <label class="form-label">Description du projet</label>
+                        <textarea class="form-input" id="devis-description" style="min-height:160px"
+                            placeholder="Décris ton projet ici..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fichier joint (optionnel)</label>
+                        <input class="form-input" type="file" id="devis-file"
+                            accept=".pdf,.doc,.docx,.zip,.jpg,.jpeg,.png,.webp">
+                    </div>
+                </section>
+
+                <!-- ── STEP 4 : COORDONNÉES ── -->
+                <section class="wizard-panel" data-step="4">
+                    <div class="wizard-title">Comment te joindre ?</div>
+                    <p class="wizard-sub">Je reviens vers toi sous 24-48h avec une première estimation.</p>
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input class="form-input" type="text" id="devis-name" placeholder="Ton nom complet">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input class="form-input" type="email" id="devis-email" placeholder="ton@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Téléphone (optionnel)</label>
+                        <input class="form-input" type="tel" id="devis-phone" placeholder="+225 XX XX XX XX XX">
+                    </div>
+                </section>
+
+                <!-- ── SUCCESS ── -->
+                <section class="wizard-panel" data-step="success">
+                    <div class="wizard-success">
+                        <div class="wizard-success-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="20,6 9,17 4,12" />
+                            </svg>
+                        </div>
+                        <div class="wizard-title">Demande envoyée !</div>
+                        <p class="wizard-sub">Merci, ta demande a bien été reçue. Je reviens vers toi sous 24-48h par
+                            email.</p>
+                        <a class="btn-hero-primary" href="index.html">Retour au portfolio</a>
+                    </div>
+                </section>
+
+                <div class="wizard-error" id="wizard-error"></div>
+
+                <div class="wizard-nav" id="wizard-nav">
+                    <button type="button" class="btn-hero-secondary" id="wizard-prev" onclick="prevStep()"
+                        style="visibility:hidden">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                        Précédent
+                    </button>
+                    <button type="button" class="btn-hero-primary" id="wizard-next" onclick="nextStep()">
+                        Suivant
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="devis.js" defer></script>
+</body>
+
+</html>

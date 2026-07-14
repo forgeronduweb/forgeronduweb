@@ -6,6 +6,7 @@ const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const Message = require('../models/Message');
 const Order = require('../models/Order');
+const Quote = require('../models/Quote');
 const Subscriber = require('../models/Subscriber');
 const Settings = require('../models/Settings');
 const { resetToSeed } = require('../data/seed');
@@ -148,6 +149,7 @@ router.post('/profile/avatar', handleImageUpload('avatar'), async (req, res) => 
 });
 
 const DOWNLOAD_TYPES = ['none', 'free', 'paid'];
+const PROJECT_CATEGORIES = ['Fullstack', 'Frontend', 'Dashboards'];
 
 function resolveDownloadFields({ downloadType, price, currency, paymentLink }) {
   const resolvedType = DOWNLOAD_TYPES.includes(downloadType) ? downloadType : 'none';
@@ -162,7 +164,7 @@ function resolveDownloadFields({ downloadType, price, currency, paymentLink }) {
 }
 
 router.post('/projects', async (req, res) => {
-  const { name, description, status, tech, demo, github } = req.body || {};
+  const { name, description, status, category, tech, demo, github } = req.body || {};
   if (!name || !description) {
     return res.status(400).json({ ok: false, message: 'Nom et description sont requis' });
   }
@@ -172,6 +174,7 @@ router.post('/projects', async (req, res) => {
     name,
     description,
     status: status || 'En cours',
+    category: PROJECT_CATEGORIES.includes(category) ? category : 'Fullstack',
     tech: Array.isArray(tech) ? tech : [],
     demo: demo || '',
     github: github || '',
@@ -181,7 +184,7 @@ router.post('/projects', async (req, res) => {
 });
 
 router.put('/projects/:id', async (req, res) => {
-  const { name, description, status, tech, demo, github } = req.body || {};
+  const { name, description, status, category, tech, demo, github } = req.body || {};
   if (!name || !description) {
     return res.status(400).json({ ok: false, message: 'Nom et description sont requis' });
   }
@@ -192,6 +195,7 @@ router.put('/projects/:id', async (req, res) => {
       name,
       description,
       ...(status ? { status } : {}),
+      ...(PROJECT_CATEGORIES.includes(category) ? { category } : {}),
       ...(Array.isArray(tech) ? { tech } : {}),
       ...(demo !== undefined ? { demo } : {}),
       ...(github !== undefined ? { github } : {}),
@@ -333,6 +337,23 @@ router.put('/messages/:id/read', async (req, res) => {
 router.delete('/messages/:id', async (req, res) => {
   const message = await Message.findByIdAndDelete(req.params.id);
   if (!message) return res.status(404).json({ ok: false, message: 'Message introuvable' });
+  res.json({ ok: true });
+});
+
+router.get('/quotes', async (_req, res) => {
+  const quotes = await Quote.find().sort({ createdAt: -1 });
+  res.json({ ok: true, quotes });
+});
+
+router.put('/quotes/:id/read', async (req, res) => {
+  const quote = await Quote.findByIdAndUpdate(req.params.id, { read: true }, { returnDocument: 'after' });
+  if (!quote) return res.status(404).json({ ok: false, message: 'Demande introuvable' });
+  res.json({ ok: true, quote });
+});
+
+router.delete('/quotes/:id', async (req, res) => {
+  const quote = await Quote.findByIdAndDelete(req.params.id);
+  if (!quote) return res.status(404).json({ ok: false, message: 'Demande introuvable' });
   res.json({ ok: true });
 });
 

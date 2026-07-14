@@ -1415,3 +1415,184 @@
     .article-view { padding: 32px 24px 60px; }
     .project-view { padding: 32px 24px 60px; }
   }
+
+  /* ─── DEVIS WIZARD ─── */
+  .devis-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .devis-topbar {
+    height: 64px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+  }
+
+  .devis-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .wizard {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .wizard-progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .wizard-progress-fill {
+    height: 100%;
+    background: var(--text);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+
+  .wizard-step-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 32px;
+  }
+
+  .wizard-panel {
+    display: none;
+  }
+
+  .wizard-panel.active {
+    display: block;
+    animation: fadeIn 0.2s;
+  }
+
+  .wizard-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .wizard-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .choice-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .choice-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .choice-card:hover { border-color: var(--border-hover); }
+
+  .choice-card.selected {
+    border-color: var(--text);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .choice-card-dot {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border: 1px solid var(--border-hover);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .choice-card.selected .choice-card-dot { border-color: var(--text); }
+
+  .choice-card.selected .choice-card-dot::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text);
+  }
+
+  .choice-card-label { font-weight: 500; }
+
+  .wizard-field-group-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 24px 0 10px;
+  }
+
+  .wizard-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .wizard-error {
+    font-size: 12px;
+    color: #ef4444;
+    min-height: 16px;
+    margin-top: 12px;
+  }
+
+  .wizard-success {
+    text-align: center;
+    padding: 12px 0;
+  }
+
+  .wizard-success .wizard-title,
+  .wizard-success .wizard-sub {
+    text-align: center;
+  }
+
+  .wizard-success-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--green-dim);
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .devis-topbar { padding: 0 20px; }
+    .devis-topbar .logo-sub { display: none; }
+  }

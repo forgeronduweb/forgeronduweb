@@ -545,7 +545,14 @@ async function loadPortfolioData({ silent = false } = {}) {
     if (name) {
       document.querySelector('.about-name').textContent = data.profile.name;
       document.querySelector('.about-role').textContent = `${data.profile.role} · ${data.profile.location}`;
-      document.querySelector('.about-bio p').textContent = data.profile.bio;
+
+      const bioContainer = document.querySelector('.about-bio');
+      if (bioContainer) {
+        const paragraphs = String(data.profile.bio || '').split(/\n+/).map(p => p.trim()).filter(Boolean);
+        bioContainer.innerHTML = paragraphs.length
+          ? paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('')
+          : '<p>Biographie à venir.</p>';
+      }
     }
 
     const avatarImg = document.getElementById('about-avatar-img');

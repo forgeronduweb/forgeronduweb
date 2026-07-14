@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 80" width="840" height="160">
+  <!-- forgeron du web — lockup horizontal (fond sombre) -->
+
+  <!-- Icône -->
+  <g transform="translate(8,8)">
+    <rect x="29" y="2" width="6" height="10" rx="1" fill="#FF7A1A"/>
+    <path d="M24 8 L19 3" stroke="#FF7A1A" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M40 8 L45 3" stroke="#FF7A1A" stroke-width="2.4" stroke-linecap="round"/>
+    <path fill="#E8E6E1" d="
+      M9 18 H42 C49 18 54.5 20 58 24.5 L55.5 28.5 C52 25.5 48 26 43 26 H37 V34
+      C37 37.4 39.2 39 42.5 39 H44 V46 H16 V39 H17.5 C20.8 39 23 37.4 23 34 V26 H9 Z"/>
+    <path fill="#E8E6E1" d="M14 49 H46 L48 54 H12 Z"/>
+  </g>
+
+  <!-- Nom : style prompt terminal -->
+  <text x="88" y="46" font-family="'Geist Mono','JetBrains Mono',ui-monospace,monospace" font-size="26" fill="#E8E6E1" letter-spacing="0.5">forgeron<tspan fill="#FF7A1A">_</tspan>du<tspan fill="#FF7A1A">_</tspan>web</text>
+
+  <!-- Curseur clignotant -->
+  <rect x="352" y="28" width="12" height="22" fill="#FF7A1A">
+    <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Tagline -->
+  <text x="88" y="66" font-family="'Geist Mono','JetBrains Mono',ui-monospace,monospace" font-size="11" fill="#6E6E76" letter-spacing="2">DÉVELOPPEUR FULLSTACK</text>
+</svg>

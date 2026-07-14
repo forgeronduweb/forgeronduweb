@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="256" height="256">
+  <!-- forgeron du web — icône : enclume + curseur-étincelle -->
+  <!-- Étincelle = curseur de terminal (le coup de marteau est une frappe clavier) -->
+  <rect x="29" y="6" width="6" height="10" rx="1" fill="#FF7A1A"/>
+  <path d="M24 12 L19 7" stroke="#FF7A1A" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M40 12 L45 7" stroke="#FF7A1A" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- Enclume -->
+  <path fill="#E8E6E1" d="
+    M9 22
+    H42
+    C49 22 54.5 24 58 28.5
+    L55.5 32.5
+    C52 29.5 48 30 43 30
+    H37
+    V38
+    C37 41.4 39.2 43 42.5 43
+    H44
+    V50
+    H16
+    V43
+    H17.5
+    C20.8 43 23 41.4 23 38
+    V30
+    H9
+    Z"/>
+
+  <!-- Socle -->
+  <path fill="#E8E6E1" d="M14 53 H46 L48 58 H12 Z"/>
+</svg>

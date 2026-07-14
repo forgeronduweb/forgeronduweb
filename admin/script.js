@@ -1249,6 +1249,19 @@ function setAvatarPreview(url) {
     img.style.display = 'none';
     initials.style.display = '';
   }
+
+  const sbImg = document.getElementById('sb-avatar-img');
+  const sbInitials = document.getElementById('sb-avatar-initials');
+  if (sbImg && sbInitials) {
+    if (url) {
+      sbImg.src = url;
+      sbImg.style.display = 'block';
+      sbInitials.style.display = 'none';
+    } else {
+      sbImg.style.display = 'none';
+      sbInitials.style.display = '';
+    }
+  }
 }
 
 function updateAvatarPreview() {

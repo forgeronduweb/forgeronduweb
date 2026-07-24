@@ -23,7 +23,7 @@ app.use(helmet({ contentSecurityPolicy: false }));
 // Le frontend appelle toujours l'API en same-origin (API_BASE = '/api'), donc le navigateur
 // n'a pas besoin de CORS pour ces requêtes. On restreint quand même explicitement aux domaines
 // du site pour empêcher un site tiers d'appeler l'API depuis le navigateur d'un visiteur.
-const ALLOWED_ORIGINS = ['https://forgeronduweb.com', 'https://www.forgeronduweb.com'];
+const ALLOWED_ORIGINS = ['https://forgeronduweb.com', 'https://www.forgeronduweb.com', 'https://admin.forgeronduweb.com'];
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);

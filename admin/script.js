@@ -231,6 +231,7 @@ async function login() {
     hideLoginScreen();
     init();
   } catch (error) {
+    errorEl.textContent = error.message || 'Mot de passe incorrect';
     errorEl.style.display = 'block';
   }
 }

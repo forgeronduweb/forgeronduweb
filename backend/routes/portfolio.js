@@ -12,7 +12,7 @@ const Quote = require('../models/Quote');
 const Subscriber = require('../models/Subscriber');
 const Visit = require('../models/Visit');
 const Settings = require('../models/Settings');
-const { publicWriteLimiter, trackingLimiter } = require('../middleware/rateLimit');
+const { publicWriteLimiter, trackingLimiter, publicReadLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -100,11 +100,11 @@ function detectQuoteFileMimetype(buffer, declaredMimetype) {
   return null;
 }
 
-router.get('/health', (_req, res) => {
+router.get('/health', publicReadLimiter, (_req, res) => {
   res.json({ ok: true, message: 'Backend connecté' });
 });
 
-router.get('/portfolio', async (req, res) => {
+router.get('/portfolio', publicReadLimiter, async (req, res) => {
   const [profile, projects, articles, settings] = await Promise.all([
     Profile.findOne(),
     Project.find(),
@@ -252,7 +252,7 @@ router.post('/articles/:id/share', publicWriteLimiter, async (req, res) => {
   res.json({ ok: true, shares: article.shares });
 });
 
-router.get('/articles/:id/comments', async (req, res) => {
+router.get('/articles/:id/comments', publicReadLimiter, async (req, res) => {
   const comments = await Comment.find({ articleId: req.params.id, approved: true }).sort({ createdAt: 1 });
   res.json({ ok: true, comments });
 });

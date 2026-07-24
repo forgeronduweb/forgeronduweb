@@ -19,7 +19,17 @@ app.set('trust proxy', 1);
 // une CSP par défaut casserait toute l'interactivité du site. Les autres protections de helmet
 // (X-Frame-Options, X-Content-Type-Options, etc.) restent actives.
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors());
+
+// Le frontend appelle toujours l'API en same-origin (API_BASE = '/api'), donc le navigateur
+// n'a pas besoin de CORS pour ces requêtes. On restreint quand même explicitement aux domaines
+// du site pour empêcher un site tiers d'appeler l'API depuis le navigateur d'un visiteur.
+const ALLOWED_ORIGINS = ['https://forgeronduweb.com', 'https://www.forgeronduweb.com'];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error('Origin non autorisée'));
+  }
+}));
 app.use(express.json());
 
 // index.html doit toujours être revalidé (point d'entrée de l'app) ; les autres fichiers

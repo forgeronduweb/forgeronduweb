@@ -27,4 +27,14 @@ const trackingLimiter = rateLimit({
   message: { ok: false, message: 'Trop de requêtes' }
 });
 
-module.exports = { loginLimiter, publicWriteLimiter, trackingLimiter };
+// Généreux : /portfolio est rechargé à chaque navigation et /health sert aux checks de
+// monitoring, mais une limite reste utile contre le scraping ou les bots agressifs.
+const publicReadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Trop de requêtes, réessaie plus tard' }
+});
+
+module.exports = { loginLimiter, publicWriteLimiter, trackingLimiter, publicReadLimiter };

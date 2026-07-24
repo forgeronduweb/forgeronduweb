@@ -42,10 +42,27 @@ const staticOptions = {
     res.setHeader('Cache-Control', cacheControl);
   }
 };
-app.use(express.static(path.join(__dirname, '..', 'frontend'), staticOptions));
-app.use('/admin', express.static(path.join(__dirname, '..', 'admin'), staticOptions));
+// Sur admin.forgeronduweb.com, le même conteneur sert l'admin à la racine du domaine (Traefik
+// route les deux domaines vers ce même port sans distinction de chemin) ; on distingue donc
+// admin/public via le Host reçu plutôt que via l'URL, pour éviter toute collision entre les
+// fichiers statiques (script.js, style.css...) des deux dossiers montés en racine.
+const ADMIN_HOST = process.env.ADMIN_HOST || 'admin.forgeronduweb.com';
+function isAdminHost(req) {
+  return req.hostname === ADMIN_HOST;
+}
 
-app.get('/', (_req, res) => {
+const frontendStatic = express.static(path.join(__dirname, '..', 'frontend'), staticOptions);
+const adminStatic = express.static(path.join(__dirname, '..', 'admin'), staticOptions);
+
+app.use((req, res, next) => {
+  if (isAdminHost(req)) return adminStatic(req, res, next);
+  next();
+});
+app.use(frontendStatic);
+app.use('/admin', adminStatic);
+
+app.get('/', (req, res) => {
+  if (isAdminHost(req)) return res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 

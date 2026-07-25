@@ -37,11 +37,25 @@ app.use(express.json());
 // éviter de retélécharger les mêmes assets à chaque navigation, tout en restant à jour
 // rapidement après un déploiement (pas de hash de version dans les noms de fichiers).
 const staticOptions = {
+  extensions: ['html'],
   setHeaders: (res, filePath) => {
     const cacheControl = filePath.endsWith('.html') ? 'no-cache' : 'public, max-age=300, must-revalidate';
     res.setHeader('Cache-Control', cacheControl);
   }
 };
+
+// Les pages sont liées en interne sans extension (ex: /devis) : express.static résout
+// /devis vers devis.html via l'option `extensions` ci-dessus. On redirige quand même les
+// URLs en .html vers leur forme sans extension pour éviter que l'ancienne URL ne réapparaisse
+// dans la barre d'adresse (marque-pages, liens externes, historique).
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.endsWith('.html')) {
+    const query = req.url.slice(req.path.length);
+    const cleanPath = req.path === '/index.html' ? '/' : req.path.slice(0, -'.html'.length);
+    return res.redirect(301, cleanPath + query);
+  }
+  next();
+});
 // Sur admin.forgeronduweb.com, le même conteneur sert l'admin à la racine du domaine (Traefik
 // route les deux domaines vers ce même port sans distinction de chemin) ; on distingue donc
 // admin/public via le Host reçu plutôt que via l'URL, pour éviter toute collision entre les

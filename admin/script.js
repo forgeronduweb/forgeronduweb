@@ -29,6 +29,30 @@ function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Les fichiers joints (devis, reçus) sont stockés en data URL (data:mime;base64,...). Chrome
+// bloque la navigation top-level directe vers une data URL en target="_blank" ("Not allowed to
+// navigate top-level frame to data URL"), donc un simple <a href="data:..."> ne s'ouvre pas.
+// On convertit en Blob + URL objet, qui elle est autorisée.
+function openAttachedFile(dataUrl, filename) {
+  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl || '');
+  if (!match) return showToast('Fichier introuvable', 'error');
+
+  const [, mimetype, base64Data] = match;
+  const binary = atob(base64Data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mimetype }));
+
+  const opened = window.open(blobUrl, '_blank', 'noopener');
+  if (!opened) {
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename || 'fichier';
+    a.click();
+  }
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+}
+
 function getToken() { return localStorage.getItem(TOKEN_KEY); }
 function setToken(token) { localStorage.setItem(TOKEN_KEY, token); }
 function clearToken() { localStorage.removeItem(TOKEN_KEY); }
@@ -811,11 +835,18 @@ function renderQuotes() {
       </div>
       ${details.length ? `<div class="article-meta">${details.map(d => `<span>${escapeHtml(d)}</span>`).join('')}</div>` : ''}
       <div class="comment-message">${escapeHtml(quote.description)}</div>
-      ${quote.fileUrl ? `<div class="article-meta"><a href="${escapeHtml(quote.fileUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(quote.fileName || 'fichier joint')}</a></div>` : ''}
+      ${quote.fileUrl ? `<div class="article-meta"><a href="#" class="quote-file-link">📎 ${escapeHtml(quote.fileName || 'fichier joint')}</a></div>` : ''}
       <div class="article-meta"><span>${new Date(quote.createdAt).toLocaleDateString('fr-FR')}</span></div>`;
     card.querySelector('.article-actions').addEventListener('click', e => e.stopPropagation());
     if (!quote.read) {
       card.querySelector('.read-btn').addEventListener('click', () => markQuoteRead(quote.id));
+    }
+    if (quote.fileUrl) {
+      card.querySelector('.quote-file-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openAttachedFile(quote.fileUrl, quote.fileName);
+      });
     }
     card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('cette demande de devis', 'quotes', quote.id));
     card.addEventListener('click', () => openQuoteDetail(quote.id));
@@ -852,7 +883,7 @@ function openQuoteDetail(id) {
       <div class="detail-row"><div class="detail-label">Reçu le</div><div class="detail-value">${new Date(quote.createdAt).toLocaleString('fr-FR')}</div></div>
     </div>
     <div class="detail-row"><div class="detail-label">Description du projet</div><div class="detail-value">${escapeHtml(quote.description)}</div></div>
-    ${quote.fileUrl ? `<div class="detail-row"><div class="detail-label">Fichier joint</div><div class="detail-value"><a href="${escapeHtml(quote.fileUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(quote.fileName || 'fichier joint')}</a></div></div>` : ''}`;
+    ${quote.fileUrl ? `<div class="detail-row"><div class="detail-label">Fichier joint</div><div class="detail-value"><a href="#" class="quote-file-link">📎 ${escapeHtml(quote.fileName || 'fichier joint')}</a></div></div>` : ''}`;
 
   const footer = `
     <a class="btn btn-ghost" style="text-decoration:none" href="mailto:${escapeHtml(quote.email)}?subject=${encodeURIComponent('Re: ta demande de devis')}">${REPLY_ICON} Répondre</a>
@@ -861,6 +892,12 @@ function openQuoteDetail(id) {
   document.getElementById('detail-title').textContent = `Devis de ${quote.name}`;
   document.getElementById('detail-body').innerHTML = body;
   document.getElementById('detail-footer').innerHTML = footer;
+  if (quote.fileUrl) {
+    document.getElementById('detail-body').querySelector('.quote-file-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      openAttachedFile(quote.fileUrl, quote.fileName);
+    });
+  }
   showModal('detail');
   if (!quote.read) markQuoteRead(quote.id);
 }
@@ -1375,7 +1412,7 @@ function renderOrders() {
       <div class="comment-message">
         ${order.buyerPhone ? `Téléphone : ${escapeHtml(order.buyerPhone)}<br>` : ''}
         ${order.proofMethod === 'receipt'
-          ? `Preuve : <a href="${escapeHtml(order.receiptFileUrl)}" target="_blank" rel="noopener">voir le reçu PDF (${escapeHtml(order.receiptFileName || 'recu.pdf')})</a>`
+          ? `Preuve : <a href="#" class="receipt-file-link">voir le reçu PDF (${escapeHtml(order.receiptFileName || 'recu.pdf')})</a>`
           : `Preuve : numéro Wave <strong>${escapeHtml(order.waveNumber)}</strong> · transaction <strong>${escapeHtml(order.transactionId)}</strong>`}
       </div>
       ${downloadLink ? `
@@ -1395,6 +1432,13 @@ function renderOrders() {
     }
     if (downloadLink) {
       card.querySelector('.copy-link-btn').addEventListener('click', () => copyOrderLink(downloadLink));
+    }
+    if (order.proofMethod === 'receipt') {
+      card.querySelector('.receipt-file-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openAttachedFile(order.receiptFileUrl, order.receiptFileName);
+      });
     }
     card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete(`la commande de ${order.buyerName}`, 'orders', order.id));
     card.addEventListener('click', () => openOrderDetail(order.id));
@@ -1421,7 +1465,7 @@ function openOrderDetail(id) {
     <div class="detail-row">
       <div class="detail-label">Preuve de paiement</div>
       <div class="detail-value">${order.proofMethod === 'receipt'
-        ? `<a href="${escapeHtml(order.receiptFileUrl)}" target="_blank" rel="noopener">voir le reçu PDF (${escapeHtml(order.receiptFileName || 'recu.pdf')})</a>`
+        ? `<a href="#" class="receipt-file-link">voir le reçu PDF (${escapeHtml(order.receiptFileName || 'recu.pdf')})</a>`
         : `Numéro Wave <strong>${escapeHtml(order.waveNumber)}</strong> · transaction <strong>${escapeHtml(order.transactionId)}</strong>`}</div>
     </div>
     ${downloadLink ? `
@@ -1446,6 +1490,12 @@ function openOrderDetail(id) {
     closeModal('detail');
     confirmDelete(`la commande de ${order.buyerName}`, 'orders', order.id);
   });
+  if (order.proofMethod === 'receipt') {
+    document.getElementById('detail-body').querySelector('.receipt-file-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      openAttachedFile(order.receiptFileUrl, order.receiptFileName);
+    });
+  }
   showModal('detail');
   if (!order.read) markOrderRead(order.id);
 }

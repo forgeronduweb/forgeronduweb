@@ -337,13 +337,16 @@
     background: var(--text);
   }
 
+  /* Le titre est une phrase entière : largeur bornée et lignes équilibrées plutôt que des retours forcés. */
   .hero h1 {
     font-family: var(--font-display);
-    font-size: clamp(44px, 6.4vw, 92px);
+    font-size: clamp(36px, 4.6vw, 68px);
     font-weight: 700;
-    line-height: 1.02;
+    line-height: 1.04;
     letter-spacing: -0.04em;
     color: var(--text);
+    max-width: 1100px;
+    text-wrap: balance;
     margin-bottom: 28px;
   }
 
@@ -1127,7 +1130,7 @@
     .nav-links, .navbar-actions { display: none; }
     .menu-toggle { display: flex; margin-left: auto; }
     .hero { padding: 56px 24px 40px; }
-    .hero h1 { font-size: clamp(30px, 9.4vw, 56px); }
+    .hero h1 { font-size: clamp(28px, 8vw, 48px); }
     .hero-desc { font-size: 16px; }
     .section-heading { padding: 48px 24px 20px; }
     .about-grid, .contact-grid { grid-template-columns: 1fr; }

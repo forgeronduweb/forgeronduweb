@@ -6,7 +6,7 @@ const Message = require('../models/Message');
 
 const seedProfile = {
   name: 'Philomé Evrard BAHO',
-  role: 'Développeur Fullstack',
+  role: 'Product Engineer · Fullstack JavaScript',
   location: 'Bingerville, Abidjan · Côte d\'Ivoire',
   yearsOfExperience: 3,
   email: 'forgeronduweb@gmail.com',
@@ -16,7 +16,11 @@ const seedProfile = {
   instagram: '',
   status: 'Ouvert aux missions',
   availabilityMessage: 'Disponible pour des missions freelance et collaborations',
-  bio: 'Développeur fullstack basé à Abidjan, spécialisé en React, Next.js et Node.js.',
+  bio: [
+    'Product Engineer basé à Abidjan, spécialisé en JavaScript fullstack : React, Next.js et Node.js. J\'aide entrepreneurs et développeurs à trouver, construire et rentabiliser leurs apps.',
+    'Titulaire d\'une Licence en Informatique spécialité E-Commerce & Marketing Digital de l\'UVCI (mention Bien), je combine une approche technique solide avec une sensibilité produit développée au fil de mes expériences.',
+    'Au quotidien, je travaille sur la gestion de portefeuille client chez Lumos CI, tout en développant des projets freelance — du marketplace de chauffeurs KONDUI CI à des dashboards analytiques en Chart.js.'
+  ].join('\n'),
   stack: ['React', 'Next.js', 'TypeScript', 'Node.js', 'Docker']
 };
 

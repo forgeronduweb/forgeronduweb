@@ -992,22 +992,23 @@ function renderOrdersReport() {
 }
 
 // ─── Graphiques (Chart.js) ───
-// Une seule teinte (bleu) pour les deux graphiques : chacun trace UNE série
-// (le revenu), ventilée par catégorie nominale (template) ou par date — la
-// couleur ne doit pas ré-encoder une information déjà portée par la position
+// Palette de la charte graphique : le noir pour la série principale de chaque graphique.
+// Les graphiques de revenu tracent UNE série, ventilée par catégorie nominale (template) ou
+// par date — la couleur ne doit pas ré-encoder une information déjà portée par la position
 // (voir la règle "un value-ramp sur des catégories nominales" à éviter).
-const CHART_BLUE = '#3b82f6';
-const CHART_BLUE_WASH = 'rgba(59,130,246,0.1)';
-const CHART_GRID = 'rgba(255,255,255,0.06)';
-const CHART_MUTED = '#808080';
-const CHART_TEXT = '#ebebeb';
-const CHART_SURFACE = '#141414';
+// Quand il y a une seconde série (visiteurs uniques), elle est grise ET en pointillés : noir
+// et gris se lisent tous deux comme des neutres, la couleur seule ne suffirait pas à l'identifier.
+const CHART_INK = '#111111';
+const CHART_GRID = '#9C9C9C';
+const CHART_MUTED = '#6A6A6A';
+const CHART_TEXT = '#111111';
+const CHART_SURFACE = '#FFFFFF';
 
 let revenueTemplateChart = null;
 let revenueTimeChart = null;
 
 if (typeof Chart !== 'undefined') {
-  Chart.defaults.font.family = "'Geist', sans-serif";
+  Chart.defaults.font.family = '"SF Pro Text", -apple-system, BlinkMacSystemFont, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif';
   Chart.defaults.color = CHART_MUTED;
 }
 
@@ -1041,8 +1042,8 @@ function renderRevenueByTemplateChart(rows, currency) {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: CHART_BLUE,
-        borderRadius: 4,
+        backgroundColor: CHART_INK,
+        borderRadius: 0,
         maxBarThickness: 22
       }]
     },
@@ -1053,8 +1054,9 @@ function renderRevenueByTemplateChart(rows, currency) {
         legend: { display: false },
         tooltip: {
           backgroundColor: CHART_SURFACE,
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
+          borderColor: CHART_INK,
+          borderWidth: 2,
+          cornerRadius: 0,
           titleColor: CHART_MUTED,
           bodyColor: CHART_TEXT,
           displayColors: false,
@@ -1071,7 +1073,7 @@ function renderRevenueByTemplateChart(rows, currency) {
         x: {
           beginAtZero: true,
           grid: { color: CHART_GRID, drawTicks: false },
-          border: { display: false },
+          border: { display: false, dash: [2, 4] },
           ticks: { callback: (v) => v.toLocaleString('fr-FR') }
         },
         y: {
@@ -1126,16 +1128,17 @@ function renderRevenueTimeChart(paidOrders, currency) {
       labels,
       datasets: [{
         data: values,
-        borderColor: CHART_BLUE,
-        backgroundColor: CHART_BLUE_WASH,
+        borderColor: CHART_INK,
+        backgroundColor: CHART_INK,
         borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: CHART_BLUE,
+        pointStyle: 'rect',
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        pointBackgroundColor: CHART_INK,
         pointBorderColor: CHART_SURFACE,
         pointBorderWidth: 2,
-        fill: true,
-        tension: 0.25
+        fill: false,
+        tension: 0
       }]
     },
     options: {
@@ -1145,8 +1148,9 @@ function renderRevenueTimeChart(paidOrders, currency) {
         legend: { display: false },
         tooltip: {
           backgroundColor: CHART_SURFACE,
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
+          borderColor: CHART_INK,
+          borderWidth: 2,
+          cornerRadius: 0,
           titleColor: CHART_MUTED,
           bodyColor: CHART_TEXT,
           displayColors: false,
@@ -1166,7 +1170,7 @@ function renderRevenueTimeChart(paidOrders, currency) {
         y: {
           beginAtZero: true,
           grid: { color: CHART_GRID, drawTicks: false },
-          border: { display: false },
+          border: { display: false, dash: [2, 4] },
           ticks: { callback: (v) => v.toLocaleString('fr-FR') }
         }
       }
@@ -1303,28 +1307,30 @@ function renderVisitsChart(daily) {
         {
           label: 'Visites',
           data: visits,
-          borderColor: CHART_BLUE,
-          backgroundColor: CHART_BLUE_WASH,
+          borderColor: CHART_INK,
+          backgroundColor: CHART_INK,
           borderWidth: 2,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          pointBackgroundColor: CHART_BLUE,
+          pointStyle: 'rect',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: CHART_INK,
           pointBorderColor: CHART_SURFACE,
           pointBorderWidth: 2,
-          fill: true,
-          tension: 0.25
+          fill: false,
+          tension: 0
         },
         {
           label: 'Visiteurs uniques',
           data: visitors,
           borderColor: CHART_MUTED,
-          backgroundColor: 'transparent',
+          backgroundColor: CHART_MUTED,
           borderWidth: 2,
           borderDash: [4, 4],
+          pointStyle: 'rect',
           pointRadius: 0,
-          pointHoverRadius: 4,
+          pointHoverRadius: 5,
           fill: false,
-          tension: 0.25
+          tension: 0
         }
       ]
     },
@@ -1336,12 +1342,18 @@ function renderVisitsChart(daily) {
           display: true,
           position: 'top',
           align: 'end',
-          labels: { color: CHART_MUTED, boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } }
+          labels: {
+            color: CHART_MUTED, boxWidth: 10, boxHeight: 10, font: { size: 11 },
+            // Carrés pleins : reporté sur un carré de 10px, le pointillé de la seconde série donne un contour haché.
+            generateLabels: (chart) => Chart.defaults.plugins.legend.labels.generateLabels(chart)
+              .map(label => ({ ...label, lineDash: [], lineWidth: 0 }))
+          }
         },
         tooltip: {
           backgroundColor: CHART_SURFACE,
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
+          borderColor: CHART_INK,
+          borderWidth: 2,
+          cornerRadius: 0,
           titleColor: CHART_MUTED,
           bodyColor: CHART_TEXT,
           padding: 10,
@@ -1357,7 +1369,7 @@ function renderVisitsChart(daily) {
         y: {
           beginAtZero: true,
           grid: { color: CHART_GRID, drawTicks: false },
-          border: { display: false },
+          border: { display: false, dash: [2, 4] },
           ticks: { precision: 0 }
         }
       }

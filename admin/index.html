@@ -6,7 +6,9 @@
 <title>Admin — Evrard BAHO Portfolio</title>
 <link rel="icon" type="image/svg+xml" href="../img/logo-monogramme.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Inter : repli pour les appareils non Apple, où SF Pro n'est pas disponible. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -34,7 +36,7 @@
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
-    <div class="sb-logo-mark"><img src="../img/logo-monogramme.svg" alt="" width="30" height="30"></div>
+    <div class="sb-logo-mark"><img src="../img/logo-icone.svg" alt="" width="30" height="30"></div>
     <div class="sb-logo-info">
       <div class="sb-logo-title">Portfolio Admin</div>
       <div class="sb-logo-sub">v1.0.0</div>
@@ -102,7 +104,7 @@
       <div style="display:flex;align-items:center;gap:9px">
         <div class="sb-avatar">
           <span id="sb-avatar-initials">EB</span>
-          <img id="sb-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;border-radius:50%;object-fit:cover;">
+          <img id="sb-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;">
         </div>
         <div class="sb-user-info">
           <div class="sb-user-name">Evrard BAHO</div>
@@ -164,7 +166,7 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <span id="last-sync-label" style="font-size:11px;font-family:var(--mono);color:var(--muted)">Dernière sync : —</span>
-      <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0"></div>
+      <div style="width:7px;height:7px;background:var(--green);animation:pulse 2s infinite;flex-shrink:0"></div>
     </div>
   </div>
   <div class="page-body">
@@ -297,7 +299,7 @@
     </div>
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><div class="card-title">Visites par jour</div></div>
-      <div class="card-body"><canvas id="visitsChart" height="80"></canvas></div>
+      <div class="card-body"><div style="height:240px"><canvas id="visitsChart"></canvas></div></div>
     </div>
     <div class="grid-2" style="align-items:start">
       <div class="card">
@@ -330,7 +332,7 @@
       Nouvel article
     </button>
   </div>
-  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+  <div class="filters-row" style="padding:14px 28px;border-bottom:2px solid var(--border);display:flex;gap:6px;align-items:center">
     <button class="btn btn-ghost active-filter" data-filter="all" onclick="setArticleFilter('all',this)">Tous (<span id="filter-count-all">0</span>)</button>
     <button class="btn btn-ghost" data-filter="published" onclick="setArticleFilter('published',this)">Publiés (<span id="filter-count-published">0</span>)</button>
     <button class="btn btn-ghost" data-filter="draft" onclick="setArticleFilter('draft',this)">Brouillons (<span id="filter-count-draft">0</span>)</button>
@@ -364,7 +366,7 @@
       <div class="page-desc">Messages reçus via le formulaire de contact</div>
     </div>
   </div>
-  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+  <div class="filters-row" style="padding:14px 28px;border-bottom:2px solid var(--border);display:flex;gap:6px;align-items:center">
     <button class="btn btn-ghost active-filter" data-filter="all" onclick="setMessageFilter('all',this)">Tous (<span id="message-count-all">0</span>)</button>
     <button class="btn btn-ghost" data-filter="unread" onclick="setMessageFilter('unread',this)">Non lus (<span id="message-count-unread">0</span>)</button>
   </div>
@@ -379,7 +381,7 @@
       <div class="page-desc">Demandes de devis reçues via le formulaire du site</div>
     </div>
   </div>
-  <div class="filters-row" style="padding:14px 28px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center">
+  <div class="filters-row" style="padding:14px 28px;border-bottom:2px solid var(--border);display:flex;gap:6px;align-items:center">
     <button class="btn btn-ghost active-filter" data-filter="all" onclick="setQuoteFilter('all',this)">Toutes (<span id="quote-count-all">0</span>)</button>
     <button class="btn btn-ghost" data-filter="unread" onclick="setQuoteFilter('unread',this)">Non lues (<span id="quote-count-unread">0</span>)</button>
   </div>
@@ -529,7 +531,7 @@
             <div class="avatar-edit">
               <div class="avatar-preview">
                 <span id="avatar-preview-initials">EB</span>
-                <img id="avatar-preview-img" src="" alt="" style="display:none;width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                <img id="avatar-preview-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;">
               </div>
               <div class="avatar-info">
                 <h4>Changer la photo</h4>
@@ -717,7 +719,7 @@
       <div class="form-group">
         <label class="form-label">Image du projet <span style="font-weight:400;color:var(--muted)">(affichée au survol)</span></label>
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:64px;height:64px;border-radius:8px;overflow:hidden;background:var(--bg4);border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+          <div style="width:64px;height:64px;overflow:hidden;background:var(--bg4);border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center">
             <img id="new-projet-image-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
             <span id="new-projet-image-placeholder" style="font-size:10px;color:var(--muted)">Aucune</span>
           </div>
@@ -775,7 +777,7 @@
       <div class="form-group">
         <label class="form-label">Image du projet</label>
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:64px;height:64px;border-radius:8px;overflow:hidden;background:var(--bg4);border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+          <div style="width:64px;height:64px;overflow:hidden;background:var(--bg4);border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center">
             <img id="edit-projet-image-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
             <span id="edit-projet-image-placeholder" style="font-size:10px;color:var(--muted)">Aucune</span>
           </div>
@@ -814,7 +816,7 @@
         <div style="display:flex;align-items:center;gap:10px">
           <button class="btn btn-ghost" style="font-size:12px" onclick="document.getElementById('edit-projet-download-file').click()">Choisir un fichier</button>
           <span id="edit-projet-download-filename" style="font-size:12px;color:var(--muted)">Aucun fichier</span>
-          <button class="btn btn-ghost" id="edit-projet-download-remove" style="font-size:12px;display:none;color:var(--red)" onclick="removeProjectDownloadFile()">Retirer</button>
+          <button class="btn btn-danger" id="edit-projet-download-remove" style="font-size:12px;display:none" onclick="removeProjectDownloadFile()">Retirer</button>
         </div>
         <input type="file" id="edit-projet-download-file" accept=".zip,.pdf,application/zip,application/pdf" style="display:none" onchange="uploadProjectDownloadFile(event)">
         <div class="form-hint">ZIP ou PDF, 8 Mo max</div>

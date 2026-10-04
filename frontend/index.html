@@ -7,11 +7,10 @@
     <title>Forgeron du web</title>
     <link rel="icon" type="image/svg+xml" href="img/logo-monogramme.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Inter : repli pour les appareils non Apple, où SF Pro n'est pas disponible. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -141,14 +140,6 @@
                 </div>
             </div>
 
-            <div class="callout" style="margin-top:24px;">
-                <div>
-                    <strong style="color:var(--text)">Actuellement disponible</strong> pour des missions
-                    freelance et projets en collaboration.
-                    Stack principale : React · Next.js · Node.js · TypeScript.
-                </div>
-            </div>
-
             <div class="terminal">
                 <div class="terminal-bar">
                     <div class="dot r"></div>
@@ -267,6 +258,7 @@
             <div class="projects-grid">
 
                 <div class="project-card">
+                    <div class="project-content">
                     <div class="project-header">
                         <div class="project-name">KONDUI CI</div>
                         <div class="project-status wip">En cours</div>
@@ -283,9 +275,11 @@
                         <a class="project-link" href="#">↗ Démo</a>
                         <a class="project-link" href="#">⌥ GitHub</a>
                     </div>
+                    </div>
                 </div>
 
                 <div class="project-card">
+                    <div class="project-content">
                     <div class="project-header">
                         <div class="project-name">Dashboard SAV — Lumos CI</div>
                         <div class="project-status live">Live</div>
@@ -300,9 +294,11 @@
                     <div class="project-links">
                         <a class="project-link" href="#">↗ Aperçu</a>
                     </div>
+                    </div>
                 </div>
 
                 <div class="project-card">
+                    <div class="project-content">
                     <div class="project-header">
                         <div class="project-name">App IA Générative</div>
                         <div class="project-status wip">En cours</div>
@@ -317,9 +313,11 @@
                     <div class="project-links">
                         <a class="project-link" href="#">⌥ GitHub</a>
                     </div>
+                    </div>
                 </div>
 
                 <div class="project-card">
+                    <div class="project-content">
                     <div class="project-header">
                         <div class="project-name">Marketplace Smartphones Premium</div>
                         <div class="project-status live">Live</div>
@@ -335,9 +333,11 @@
                         <a class="project-link" href="#">↗ Démo</a>
                         <a class="project-link" href="#">⌥ GitHub</a>
                     </div>
+                    </div>
                 </div>
 
                 <div class="project-card">
+                    <div class="project-content">
                     <div class="project-header">
                         <div class="project-name">CV Interactif HTML</div>
                         <div class="project-status live">Live</div>
@@ -352,13 +352,14 @@
                     <div class="project-links">
                         <a class="project-link" href="#">↗ Voir</a>
                     </div>
+                    </div>
                 </div>
 
-                <div class="project-card" style="background: rgba(255,255,255,0.01); cursor:default;">
+                <div class="project-card" style="border-style: dashed; cursor:default;">
                     <div
-                        style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 20px; text-align:center; gap:12px;">
-                        <div style="font-size:28px; opacity:0.2">+</div>
-                        <div style="font-size:12px; color:var(--text-faint); font-family:var(--mono)">Prochain
+                        style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 32px 20px; text-align:center; gap:12px;">
+                        <div style="font-size:28px; opacity:0.25">+</div>
+                        <div style="font-size:12px; color:var(--text-muted)">Prochain
                             projet à venir</div>
                     </div>
                 </div>

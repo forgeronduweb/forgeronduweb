@@ -135,7 +135,7 @@ async function submitFreeDownload(id) {
   const email = document.getElementById(`free-email-${id}`)?.value.trim() || '';
 
   if (!email) {
-    if (feedback) { feedback.textContent = 'Email requis.'; feedback.style.color = '#ef4444'; }
+    if (feedback) { feedback.textContent = 'Email requis.'; feedback.style.color = 'var(--text)'; }
     return;
   }
 
@@ -150,7 +150,7 @@ async function submitFreeDownload(id) {
 
     if (feedback) {
       feedback.textContent = 'Merci ! Ton téléchargement démarre...';
-      feedback.style.color = '#22c55e';
+      feedback.style.color = 'var(--text)';
     }
     const link = document.createElement('a');
     link.href = result.downloadUrl;
@@ -161,7 +161,7 @@ async function submitFreeDownload(id) {
   } catch (error) {
     if (feedback) {
       feedback.textContent = error.message || 'Échec de l\'envoi.';
-      feedback.style.color = '#ef4444';
+      feedback.style.color = 'var(--text)';
     }
   }
 }
@@ -186,7 +186,7 @@ async function submitOrder(id) {
   const proofMethod = document.querySelector(`input[name="proof-method-${id}"]:checked`)?.value || 'transaction';
 
   if (!buyerName || !buyerEmail) {
-    if (feedback) { feedback.textContent = 'Nom et email sont requis.'; feedback.style.color = '#ef4444'; }
+    if (feedback) { feedback.textContent = 'Nom et email sont requis.'; feedback.style.color = 'var(--text)'; }
     return;
   }
 
@@ -199,7 +199,7 @@ async function submitOrder(id) {
   if (proofMethod === 'receipt') {
     const file = document.getElementById(`buy-receipt-file-${id}`)?.files[0];
     if (!file) {
-      if (feedback) { feedback.textContent = 'Merci de joindre le reçu PDF.'; feedback.style.color = '#ef4444'; }
+      if (feedback) { feedback.textContent = 'Merci de joindre le reçu PDF.'; feedback.style.color = 'var(--text)'; }
       return;
     }
     formData.append('receipt', file);
@@ -207,7 +207,7 @@ async function submitOrder(id) {
     const waveNumber = document.getElementById(`buy-wave-number-${id}`)?.value.trim() || '';
     const transactionId = document.getElementById(`buy-transaction-id-${id}`)?.value.trim() || '';
     if (!waveNumber || !transactionId) {
-      if (feedback) { feedback.textContent = 'Numéro Wave et ID de transaction sont requis.'; feedback.style.color = '#ef4444'; }
+      if (feedback) { feedback.textContent = 'Numéro Wave et ID de transaction sont requis.'; feedback.style.color = 'var(--text)'; }
       return;
     }
     formData.append('waveNumber', waveNumber);
@@ -221,12 +221,12 @@ async function submitOrder(id) {
 
     if (feedback) {
       feedback.textContent = 'Merci ! Ta preuve a bien été envoyée, tu recevras ton lien de téléchargement après vérification.';
-      feedback.style.color = '#22c55e';
+      feedback.style.color = 'var(--text)';
     }
   } catch (error) {
     if (feedback) {
       feedback.textContent = error.message || 'Échec de l\'envoi.';
-      feedback.style.color = '#ef4444';
+      feedback.style.color = 'var(--text)';
     }
   }
 }
@@ -499,14 +499,14 @@ async function submitComment(event, id) {
 
     if (feedback) {
       feedback.textContent = 'Merci ! Ton commentaire est en attente de validation.';
-      feedback.style.color = '#22c55e';
+      feedback.style.color = 'var(--text)';
     }
     nameInput.value = '';
     messageInput.value = '';
   } catch (error) {
     if (feedback) {
       feedback.textContent = 'Échec de l\'envoi du commentaire.';
-      feedback.style.color = '#ef4444';
+      feedback.style.color = 'var(--text)';
     }
   }
   return false;
@@ -785,7 +785,7 @@ async function loadPortfolioData({ silent = false } = {}) {
   } catch (error) {
     if (!silent && statusEl) {
       statusEl.textContent = 'Impossible de joindre le backend';
-      statusEl.style.color = '#ef4444';
+      statusEl.style.color = 'var(--text)';
     }
     console.error('Erreur de chargement du portfolio', error);
   }
@@ -816,20 +816,20 @@ async function handleSubmit(btn) {
 
     if (statusEl) {
       statusEl.textContent = 'Message envoyé avec succès';
-      statusEl.style.color = '#22c55e';
+      statusEl.style.color = 'var(--text)';
     }
     btn.textContent = 'Message envoyé ✓';
-    btn.style.background = '#22c55e';
-    btn.style.color = '#fff';
+    btn.style.background = 'var(--text)';
+    btn.style.color = 'var(--bg)';
     form.reset();
   } catch (error) {
     if (statusEl) {
       statusEl.textContent = 'Échec de l\'envoi';
-      statusEl.style.color = '#ef4444';
+      statusEl.style.color = 'var(--text)';
     }
     btn.textContent = 'Échec de l\'envoi';
-    btn.style.background = '#ef4444';
-    btn.style.color = '#fff';
+    btn.style.background = 'var(--text)';
+    btn.style.color = 'var(--bg)';
     console.error(error);
   } finally {
     setTimeout(() => {
